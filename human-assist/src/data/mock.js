@@ -51,7 +51,7 @@ export function createMock() {
       live: [['citizen', 'Hello? Is anyone there?']],
     },
     {
-      id: 's_8852', channel: 'voice', lang: 'Tamil', waitedSec: 7, reason: 'Distress detected (safety trigger)',
+      id: 's_8852', channel: 'voice', lang: 'Telugu', waitedSec: 7, reason: 'Distress detected (safety trigger)',
       priority: true,
       caller: { label: 'Caller ••318', phone: '+91 ••••• ••318', verified: false, authLevel: 0, tickets: [] },
       summary: {
@@ -60,11 +60,11 @@ export function createMock() {
         sentiment: 'Distressed',
       },
       history: [
-        ['ai', 'Vanakkam! This is an automated assistant for PM-KISAN.'],
-        ['citizen', '(Tamil) My payments stopped and the crop has failed. I don’t know what to do.'],
+        ['ai', 'నమస్కారం! This is an automated assistant for PM-KISAN.'],
+        ['citizen', 'నా డబ్బు ఆగిపోయింది, పంట కూడా పోయింది. ఏం చేయాలో తెలియడం లేదు. (My payments stopped and the crop has failed. I don’t know what to do.)'],
         ['system', 'Safety trigger · transferred immediately · flagged Critical'],
       ],
-      live: [['citizen', '(Tamil) Please help me, the last two instalments have not come.']],
+      live: [['citizen', 'దయచేసి సహాయం చేయండి, గత రెండు విడతలు రాలేదు. (Please help me, the last two instalments have not come.)']],
     },
   ];
 
@@ -82,10 +82,10 @@ export function createMock() {
   const dispositions = ['Information given', 'Grievance registered', 'Callback scheduled', 'Escalated to state nodal officer', 'Wrong number / no response'];
 
   const callbacks = [
-    { ref: 'CB-48213', when: 'Tomorrow · 9 am – 12 pm', lang: 'Bengali', channel: 'chat', summary: 'Asked why e-KYC shows pending after biometric e-KYC at a CSC last week.', verified: true, status: 'scheduled' },
+    { ref: 'CB-48213', when: 'Tomorrow · 9 am – 12 pm', lang: 'Malayalam', channel: 'chat', summary: 'Asked why e-KYC shows pending after biometric e-KYC at a CSC last week.', verified: true, status: 'scheduled' },
     { ref: 'CB-48207', when: 'Tomorrow · 12 pm – 3 pm', lang: 'Hindi', channel: 'voice', summary: 'Wants to add a son who inherited land; asked about the mutation process.', verified: false, status: 'scheduled' },
     { ref: 'CB-48190', when: 'Today · 3 pm – 6 pm', lang: 'English', channel: 'chat', summary: 'Bank account closed; needs to update details. Complaint G-2026-0512 already registered.', verified: true, status: 'due' },
-    { ref: 'CB-48177', when: 'Yesterday', lang: 'Marathi', channel: 'voice', summary: 'Asked about the 3 instalment periods; resolved on callback.', verified: false, status: 'done' },
+    { ref: 'CB-48177', when: 'Yesterday', lang: 'Telugu', channel: 'voice', summary: 'Asked about the 3 instalment periods; resolved on callback.', verified: false, status: 'done' },
   ];
 
   return { officer, queue, knowledge, dispositions, callbacks };

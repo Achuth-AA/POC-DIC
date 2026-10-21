@@ -7,7 +7,9 @@ export function createMock() {
     { id: 'd1', title: 'PM-KISAN Operational Guidelines', file: 'pmkisan_operational_guidelines.pdf', type: 'PDF', audience: 'public', version: 3, status: 'published', pages: 42, chunks: 84, size: '2.4 MB', updated: '2026-10-18 16:20', by: 'admin@dic' },
     { id: 'd2', title: 'PM-KISAN FAQs', file: 'pmkisan_faq.docx', type: 'DOCX', audience: 'public', version: 5, status: 'published', pages: 18, chunks: 61, size: '310 KB', updated: '2026-10-19 11:05', by: 'admin@dic' },
     { id: 'd3', title: 'PM-KISAN FAQs (हिंदी)', file: 'pmkisan_faq_hi.docx', type: 'DOCX', audience: 'public', version: 2, status: 'published', pages: 20, chunks: 66, size: '355 KB', updated: '2026-10-19 11:12', by: 'admin@dic' },
-    { id: 'd4', title: 'Circular: e-KYC camp schedule, Oct 2026', file: 'circular_ekyc_oct2026.pdf', type: 'PDF', audience: 'public', version: 1, status: 'draft', pages: 3, chunks: 6, size: '180 KB', updated: '2026-10-21 09:40', by: 'admin@dic', priority: 'high' },
+    { id: 'd8', title: 'PM-KISAN FAQs (తెలుగు)', file: 'pmkisan_faq_te.docx', type: 'DOCX', audience: 'public', version: 1, status: 'published', pages: 21, chunks: 68, size: '372 KB', updated: '2026-10-20 15:30', by: 'admin@dic' },
+    { id: 'd9', title: 'PM-KISAN FAQs (മലയാളം)', file: 'pmkisan_faq_ml.docx', type: 'DOCX', audience: 'public', version: 1, status: 'published', pages: 22, chunks: 70, size: '388 KB', updated: '2026-10-20 15:42', by: 'admin@dic' },
+    { id: 'd4', title: 'Circular: e-KYC camp schedule, Oct 2026', file: 'circular_ekyc_oct2026.pdf', type: 'PDF', audience: 'public', version: 1, status: 'published', pages: 3, chunks: 6, size: '180 KB', updated: '2026-10-21 09:40', by: 'admin@dic', priority: 'high' },
     { id: 'd5', title: 'Officer SOP: bank detail correction', file: 'sop_bank_correction.pdf', type: 'PDF', audience: 'internal', version: 1, status: 'published', pages: 6, chunks: 12, size: '420 KB', updated: '2026-10-15 14:00', by: 'admin@dic' },
     { id: 'd6', title: 'Beneficiary status (sample)', file: 'beneficiary_status.csv', type: 'CSV', audience: 'tool', version: 4, status: 'published', rows: 2400, chunks: 0, size: '196 KB', updated: '2026-10-20 18:30', by: 'admin@dic', lookup: 'registration_no', tool: 'get_beneficiary_status', minAuth: 1 },
     { id: 'd7', title: 'Grievance categories', file: 'grievance_categories.xlsx', type: 'XLSX', audience: 'tool', version: 1, status: 'published', rows: 14, chunks: 0, size: '22 KB', updated: '2026-10-12 10:10', by: 'admin@dic', lookup: 'category', tool: 'list_grievance_categories', minAuth: 0 },
@@ -31,6 +33,14 @@ export function createMock() {
     d3: [
       { page: 2, section: 'प्रश्न 2. कौन से दस्तावेज़ चाहिए?', text: 'आधार कार्ड, ज़मीन के कागज़, बैंक पासबुक और आधार से जुड़ा मोबाइल नंबर।' },
       { page: 7, section: 'प्रश्न 7. क्या e-KYC ज़रूरी है?', text: 'हाँ, सभी लाभार्थियों के लिए e-KYC ज़रूरी है।' },
+    ],
+    d8: [
+      { page: 2, section: 'ప్రశ్న 2. ఏ పత్రాలు కావాలి?', text: 'ఆధార్ కార్డు, భూమి పత్రాలు, బ్యాంక్ పాస్‌బుక్ మరియు ఆధార్‌తో లింక్ అయిన మొబైల్ నంబర్.' },
+      { page: 7, section: 'ప్రశ్న 7. e-KYC తప్పనిసరా?', text: 'అవును, లబ్ధిదారులందరికీ e-KYC తప్పనిసరి.' },
+    ],
+    d9: [
+      { page: 2, section: 'ചോദ്യം 2. ഏതൊക്കെ രേഖകൾ വേണം?', text: 'ആധാർ കാർഡ്, ഭൂരേഖകൾ, ബാങ്ക് പാസ്ബുക്ക്, ആധാറുമായി ലിങ്ക് ചെയ്ത മൊബൈൽ നമ്പർ.' },
+      { page: 7, section: 'ചോദ്യം 7. e-KYC നിർബന്ധമാണോ?', text: 'അതെ, എല്ലാ ഗുണഭോക്താക്കൾക്കും e-KYC നിർബന്ധമാണ്.' },
     ],
     d4: [
       { page: 1, section: 'Subject', text: 'Special e-KYC camps will be held at all Common Service Centres from 1 to 15 November 2026 for beneficiaries whose e-KYC is pending.' },
@@ -66,24 +76,29 @@ export function createMock() {
     stt: {
       label: 'Speech to text (STT)', active: 'sarvam-saarika', fallback: 'deepgram-nova-3',
       options: [
-        { id: 'sarvam-saarika', name: 'Sarvam Saarika', vendor: 'Sarvam AI', region: 'India', version: 'saarika:v2', p50: 140, health: 'ok', use: 'Indian languages, code-mixed' },
-        { id: 'deepgram-nova-3', name: 'Deepgram Nova-3', vendor: 'Deepgram', region: 'Confirm region', version: 'nova-3-multilingual', p50: 120, health: 'ok', use: 'English + Hindi' },
-        { id: 'google-chirp', name: 'Google Chirp', vendor: 'Google Cloud', region: 'asia-south1 (Mumbai)', version: 'chirp_2', p50: 210, health: 'degraded', use: 'Wide language coverage' },
+        { id: 'sarvam-saarika', name: 'Sarvam Saarika', vendor: 'Sarvam AI', region: 'India', version: 'saarika:v2', p50: 140, health: 'ok', use: 'EN · HI · TE · ML, code-mixed' },
+        { id: 'deepgram-nova-3', name: 'Deepgram Nova-3', vendor: 'Deepgram', region: 'Confirm region', version: 'nova-3-multilingual', p50: 120, health: 'ok', use: 'EN · HI (confirm TE · ML support)' },
+        { id: 'google-chirp', name: 'Google Chirp', vendor: 'Google Cloud', region: 'asia-south1 (Mumbai)', version: 'chirp_2', p50: 210, health: 'degraded', use: 'EN · HI · TE · ML' },
       ],
     },
     tts: {
       label: 'Text to speech (TTS)', active: 'sarvam-bulbul', fallback: 'google-tts',
       options: [
-        { id: 'sarvam-bulbul', name: 'Sarvam Bulbul', vendor: 'Sarvam AI', region: 'India', version: 'bulbul:v2', p50: 110, health: 'ok', use: 'Indian voices' },
-        { id: 'google-tts', name: 'Google Cloud TTS', vendor: 'Google Cloud', region: 'asia-south1 (Mumbai)', version: 'neural2', p50: 150, health: 'ok', use: 'Backup voice' },
-        { id: 'cartesia', name: 'Cartesia Sonic', vendor: 'Cartesia', region: 'Confirm region', version: 'sonic-2', p50: 90, health: 'ok', use: 'Lowest first-byte latency' },
+        { id: 'sarvam-bulbul', name: 'Sarvam Bulbul', vendor: 'Sarvam AI', region: 'India', version: 'bulbul:v2', p50: 110, health: 'ok', use: 'Indian voices · EN · HI · TE · ML', voices: ['Anushka · female', 'Abhilash · male', 'Vidya · female'] },
+        { id: 'google-tts', name: 'Google Cloud TTS', vendor: 'Google Cloud', region: 'asia-south1 (Mumbai)', version: 'neural2', p50: 150, health: 'ok', use: 'Backup voice · EN · HI · TE · ML', voices: ['Neural2-A · female', 'Neural2-B · male'] },
+        { id: 'cartesia', name: 'Cartesia Sonic', vendor: 'Cartesia', region: 'Confirm region', version: 'sonic-2', p50: 90, health: 'ok', use: 'Lowest first-byte latency (confirm TE · ML)', voices: ['Indian English · female', 'Hindi · male'] },
       ],
     },
   };
 
-  const cache = { enabled: true, threshold: 0.92, entries: 1284, hitRate: 0.47, falseHitRate: 0.006 };
+  // Answer generation settings shown in the Models page "Run settings" panel.
+  const settings = { voice: 'Anushka · female', defaultLang: 'auto', temperature: 0.2, maxTokens: 150, topK: 4, autoFailover: true };
+
+  // Cached answers are keyed by KB version, so publishing a change makes every older entry unusable.
+  const cache = { enabled: true, threshold: 0.92, entries: 1284, kbVersion: 7, hitRate: 0.47, falseHitRate: 0.006, lastCleared: null };
 
   const changeLog = [
+    { at: '2026-10-21 08:05', who: 'admin@dic', kind: 'Knowledge', from: 'KB v6', to: 'KB v7', note: 'Published PM-KISAN FAQs v5 · 1,102 cached answers from v6 cleared' },
     { at: '2026-10-21 09:12', who: 'admin@dic', kind: 'STT', from: 'deepgram-nova-3', to: 'sarvam-saarika', note: 'Better Hindi WER in eval run #14' },
     { at: '2026-10-20 17:45', who: 'admin@dic', kind: 'Cache', from: 'threshold 0.90', to: 'threshold 0.92', note: 'False hits 1.4% → 0.6%' },
     { at: '2026-10-19 10:02', who: 'system', kind: 'LLM', from: 'claude-haiku-5-5', to: 'vllm-local', note: 'Auto-failover: 3 failed health checks (restored after 6 min)' },
@@ -120,7 +135,7 @@ export function createMock() {
   ];
 
   const languages = [
-    { lang: 'Hindi', share: 0.46 }, { lang: 'English', share: 0.31 }, { lang: 'Hinglish', share: 0.14 }, { lang: 'Tamil', share: 0.05 }, { lang: 'Bengali', share: 0.04 },
+    { lang: 'Hindi', share: 0.42 }, { lang: 'English', share: 0.27 }, { lang: 'Telugu', share: 0.14 }, { lang: 'Malayalam', share: 0.1 }, { lang: 'Hinglish', share: 0.07 },
   ];
 
   const sessions = [
@@ -128,9 +143,9 @@ export function createMock() {
     { id: 's_c_2291', channel: 'chat', caller: 'Web visitor', lang: 'English', started: '10:31', duration: '6m 05s', turns: 7, outcome: 'resolved', p50: 640, cache: 2, live: false },
     { id: 's_8850', channel: 'voice', caller: '+91 ••••• ••903', lang: 'Hinglish', started: '10:55', duration: '1m 12s', turns: 3, outcome: 'live', p50: 710, cache: 2, live: true },
     { id: 's_c_2304', channel: 'chat', caller: 'Web visitor', lang: 'Hindi', started: '10:57', duration: '0m 48s', turns: 2, outcome: 'live', p50: 420, cache: 2, live: true },
-    { id: 's_8838', channel: 'voice', caller: '+91 ••••• ••277', lang: 'Tamil', started: '10:20', duration: '2m 40s', turns: 5, outcome: 'resolved', p50: 860, cache: 1, live: false },
+    { id: 's_8838', channel: 'voice', caller: '+91 ••••• ••277', lang: 'Telugu', started: '10:20', duration: '2m 40s', turns: 5, outcome: 'resolved', p50: 860, cache: 1, live: false },
     { id: 's_8836', channel: 'voice', caller: '+91 ••••• ••130', lang: 'English', started: '10:11', duration: '0m 55s', turns: 2, outcome: 'abandoned', p50: 700, cache: 0, live: false },
-    { id: 's_c_2288', channel: 'chat', caller: 'Web visitor', lang: 'Bengali', started: '10:05', duration: '3m 10s', turns: 4, outcome: 'callback', p50: 690, cache: 1, live: false },
+    { id: 's_c_2288', channel: 'chat', caller: 'Web visitor', lang: 'Malayalam', started: '10:05', duration: '3m 10s', turns: 4, outcome: 'callback', p50: 690, cache: 1, live: false },
     { id: 's_8831', channel: 'voice', caller: '+91 ••••• ••458', lang: 'Hindi', started: '09:58', duration: '4m 02s', turns: 8, outcome: 'resolved', p50: 760, cache: 3, live: false },
   ];
 
@@ -178,7 +193,7 @@ export function createMock() {
     ],
     stt: [
       { lang: 'English', acc: 0.93, target: 0.85 }, { lang: 'Hindi', acc: 0.9, target: 0.85 }, { lang: 'Hinglish', acc: 0.87, target: 0.85 },
-      { lang: 'Tamil', acc: 0.84, target: 0.8 }, { lang: 'Bengali', acc: 0.82, target: 0.8 },
+      { lang: 'Telugu', acc: 0.84, target: 0.8 }, { lang: 'Malayalam', acc: 0.82, target: 0.8 },
     ],
     redteam: [
       { cat: 'Direct prompt injection', n: 12, blocked: 12 }, { cat: 'Jailbreak / role-play', n: 8, blocked: 8 },
@@ -193,5 +208,5 @@ export function createMock() {
     ],
   };
 
-  return { kb, documents, chunks, tables, providers, cache, changeLog, latency, stageBudget, kpis, routes, languages, sessions, turns, evalReport };
+  return { settings, kb, documents, chunks, tables, providers, cache, changeLog, latency, stageBudget, kpis, routes, languages, sessions, turns, evalReport };
 }

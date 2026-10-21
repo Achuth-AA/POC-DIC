@@ -69,12 +69,28 @@ Notes:
 
 ### Demo tips
 
-- **Widget:** try "Am I eligible?", "kist kab aati hai?" (Hindi reply), "Check my status" (registration
-  `UP123456789`, any 10-digit mobile, OTP `123456`), "Register a complaint", "Talk to an officer".
+- **Languages:** English and Hindi (mandatory), plus Telugu and Malayalam. Pick one in the widget header, use the
+  हिन्दी / తెలుగు / മലയാളം links in the top strip, or just type in that script; the reply comes back in the same
+  language, and the quick-reply buttons are translated too.
+- **Widget:** try "Am I eligible?", "kist kab aati hai?" (Hindi reply), "నాకు ఎంత డబ్బు వస్తుంది?" (Telugu),
+  "എനിക്ക് അർഹതയുണ്ടോ?" (Malayalam), "Check my status" (registration `UP123456789`, `TS456123789` or
+  `KL321654987`, any 10-digit mobile, OTP `123456`), "Register a complaint", "Talk to an officer".
   Add `?agents=offline` to the URL to see the callback / email flow instead of a live officer.
-- **Admin → Knowledge base:** upload any PDF/DOCX/CSV to watch ingestion, publish the draft circular
-  (KB version goes up), click a document to preview its chunks, and use *Test a question*.
-- **Admin → Providers:** switch LLM/STT/TTS, apply, and see the change log; the dashboard follows.
+- **Voice call from the page:** "📞 Talk to the assistant" in the hero, "Call the assistant" in Help, or the
+  **Call** button next to the chat button. The call screen has a language picker, timer, mute and end call. It is
+  the screen only for now; the browser voice call connects once the LiveKit voice agent is built.
+- **Admin look:** a clean light theme in the style of Google AI Studio.
+- **Admin → Knowledge base:** press **Update knowledge base**, add files or a web page, choose who can use each
+  (Public / Officers only), optionally say what changed, and press the button once. It shows each step (read,
+  split into passages, embed, check for hidden instructions, publish as the next version, clear the old cached
+  answers) and goes live as the new version. Each source's ⋯ menu has Preview, Re-index and Remove; every one of
+  those also creates a new version and clears the cache. *History* shows the version log. *Test a question* runs
+  retrieval as a live call would.
+- **Admin → Models & voice:** a playground on the left (ask a question, see the answer, sources, route and the
+  estimated voice-turn latency; ask twice for a cache hit) and **Run settings** on the right, all dropdowns and
+  sliders: language model and backup, temperature, max reply length, speech-to-text and backup, text-to-speech,
+  voice, default language, and under *Advanced* the passages per answer, cache and failover. *Save* applies to new
+  calls and logs each change.
 - **Agent console:** answer the voice call. New caller lines arrive live and the suggestions update.
   End the call and complete the wrap-up. A callback booked during a call shows on the Callbacks page.
   A new handoff appears after about 20 seconds.

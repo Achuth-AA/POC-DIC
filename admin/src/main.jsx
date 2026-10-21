@@ -1,12 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 import { StoreProvider } from './store.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Knowledge from './pages/Knowledge.jsx';
-import Providers from './pages/Providers.jsx';
+import Models from './pages/Models.jsx';
 import Calls from './pages/Calls.jsx';
 import Evaluation from './pages/Evaluation.jsx';
 import './styles/admin.css';
@@ -21,7 +21,8 @@ createRoot(document.getElementById('root')).render(
             <Route element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="knowledge" element={<Knowledge />} />
-              <Route path="providers" element={<Providers />} />
+              <Route path="models" element={<Models />} />
+              <Route path="providers" element={<Navigate to="/models" replace />} />
               <Route path="calls" element={<Calls />} />
               <Route path="evaluation" element={<Evaluation />} />
               <Route path="*" element={<Dashboard />} />
