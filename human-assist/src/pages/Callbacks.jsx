@@ -25,10 +25,10 @@ export default function Callbacks() {
           <tbody>
             {state.callbacks.map((c) => (
               <tr key={c.ref}>
-                <td className="mono">{c.ref}</td><td>{c.when}</td><td><span className="cell-ch"><Icon name={c.channel === 'voice' ? 'phone' : 'chat'} size={16} />{c.channel === 'voice' ? 'Voice' : 'Chat'}</span></td><td>{c.lang}</td>
+                <td className="mono" style={{ whiteSpace: 'nowrap' }}>{c.ref}</td><td>{c.when}</td><td><span className="cell-ch"><Icon name={c.channel === 'voice' ? 'phone' : 'chat'} size={16} />{c.channel === 'voice' ? 'Voice' : 'Chat'}</span></td><td>{c.lang}</td>
                 <td>{c.summary}</td><td>{c.verified ? <span className="tag tag--ok"><Icon name="check" size={14} />OTP</span> : <span className="tag">No</span>}</td>
                 <td><span className={STATUS[c.status][0]}>{STATUS[c.status][1]}</span></td>
-                <td>{c.status !== 'done' && <button type="button" className="btn btn--sm btn--primary" onClick={() => call(c)}>Call now</button>}</td>
+                <td>{c.status !== 'done' && <button type="button" className={`btn btn--sm ${c.status === 'due' ? 'btn--primary' : ''}`} onClick={() => call(c)}>Call now</button>}</td>
               </tr>
             ))}
           </tbody>

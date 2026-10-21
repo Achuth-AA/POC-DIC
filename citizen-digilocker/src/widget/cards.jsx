@@ -1,14 +1,14 @@
-// Interactive cards inside the chat: OTP verification, status, confirmation, handoff options.
+// Interactive cards inside the chat: OTP verification, status, confirmation, handoff and call options.
 import { useEffect, useRef, useState } from 'react';
+import { AUTH } from './content.js';
 import { backend } from './mockBackend.js';
 import Icon from '../components/Icon.jsx';
 
 export function StatusCard({ record: r }) {
-  const rows = [['Registration no.', r.regNo], ['Name', r.name], ['State', r.state], ['Land records', r.land], ['e-KYC', r.ekyc], ['Latest instalment', r.last], ['Next instalment', r.next]];
   return (
     <div className="tnw-card">
-      <h3 className="tnw-card__title">Beneficiary status</h3>
-      <dl className="tnw-dl">{rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+      <h3 className="tnw-card__title">{r.title}</h3>
+      <dl className="tnw-dl">{r.rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
       <p className="tnw-card__foot">Verified with OTP · personal data is never cached</p>
     </div>
   );
@@ -47,7 +47,7 @@ export function OtpCard({ t, sessionId, onVerified }) {
       <h3 className="tnw-card__title">Verify it's you</h3>
       {step === 1 ? (
         <div className="tnw-otp__step1">
-          <label>{t.regNo}<input ref={regRef} name="reg" value={reg} onChange={(e) => setReg(e.target.value)} autoComplete="off" placeholder="UP123456789" required /></label>
+          <label>{t.regNo}<input ref={regRef} name="reg" value={reg} onChange={(e) => setReg(e.target.value)} autoComplete="off" placeholder={AUTH.example} required /></label>
           <label>{t.mobile}<input name="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} inputMode="numeric" autoComplete="tel" placeholder="10-digit number" maxLength={10} required /></label>
           <button type="submit" className="tnw-btn tnw-btn--primary">{t.sendOtp}</button>
         </div>
@@ -140,6 +140,19 @@ export function OfflineHandoffCard({ t, text, sessionId, onDone }) {
           <button type="button" className="tnw-btn tnw-btn--primary" onClick={sendMail}>Send</button>
         </div>
       )}
+    </div>
+  );
+}
+
+export function CallOfferCard({ t, onCall }) {
+  return (
+    <div className="tnw-card tnw-calloffer">
+      <span className="tnw-calloffer__icon" aria-hidden="true"><Icon name="phone" size={20} /></span>
+      <div>
+        <p className="tnw-calloffer__title">{t.callHint}</p>
+        <p className="tnw-card__foot">English · हिन्दी · తెలుగు · മലയാളം</p>
+      </div>
+      <button type="button" className="tnw-btn tnw-btn--primary" onClick={onCall}><Icon name="phone" size={16} />{t.callNow}</button>
     </div>
   );
 }

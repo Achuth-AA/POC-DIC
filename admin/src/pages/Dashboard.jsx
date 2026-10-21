@@ -7,10 +7,11 @@ import { useToast } from '../components/Toast.jsx';
 import { downloadJson, ms, pct } from '../lib/format.js';
 import { useStore } from '../store.jsx';
 
-const STAGE_COLORS = ['var(--c-eos)', 'var(--c-stt)', 'var(--c-ret)', 'var(--c-llm)', 'var(--c-tts)', 'var(--c-pub)'];
+// Stages in ink steps; the LLM stage, the one this screen is about, takes the data hue.
+const STAGE_COLORS = ['var(--c-eos)', 'var(--c-stt)', 'var(--c-ret)', 'var(--data)', 'var(--c-tts)', 'var(--c-pub)'];
 const STAGE_SHORT = ['End of speech', 'STT', 'Retrieval', 'LLM first token', 'TTS first audio', 'Publish'];
 // Colour only where it means something: the cache hit is the data story, the rest stays neutral.
-const ROUTE_COLORS = ['var(--accent)', 'var(--line-2)', 'var(--line-2)', 'var(--warn)', 'var(--bad)'];
+const ROUTE_COLORS = ['var(--data)', '#b3b6bb', '#b3b6bb', '#b3b6bb', '#b3b6bb'];
 const TARGET = 1000;
 
 // Signature element: one voice turn laid out on its own clock, end of caller speech to first reply audio.
@@ -45,14 +46,16 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [range, setRange] = useState('24 h');
 
+  // The screen's question: are calls answered inside one second right now? The lead figure answers it.
   const cards = [
-    { label: 'Voice calls', value: k.voiceCalls, meta: `${k.voiceMinutes.toLocaleString('en-IN')} billable min` },
-    { label: 'Chat sessions', value: k.chatSessions, meta: 'completed sessions' },
-    { label: 'Median latency', value: ms(k.p50), meta: 'target < 1,000 ms', good: k.p50 < 1000 },
-    { label: 'p90 latency', value: ms(k.p90), meta: 'SLA p95 ≤ 1,000 ms', good: k.p90 <= 1000 },
-    { label: 'Cache hit rate', value: pct(k.cacheHit), meta: 'target ≥ 40%', good: k.cacheHit >= 0.4 },
+    { label: 'Median latency', value: ms(k.p50), meta: `${ms(TARGET - k.p50)} under the 1,000 ms target`, lead: true },
+    { label: 'p90 latency', value: ms(k.p90), meta: k.p90 > TARGET ? `${ms(k.p90 - TARGET)} over the 1,000 ms target` : 'inside the 1,000 ms target', good: k.p90 <= TARGET },
+    { label: 'Cache hit rate', value: pct(k.cacheHit), meta: 'target 40% or more', good: k.cacheHit >= 0.4 },
+    { label: 'Voice calls', value: k.voiceCalls.toLocaleString('en-IN'), meta: `${k.voiceMinutes.toLocaleString('en-IN')} min today` },
+    { label: 'Chat sessions', value: k.chatSessions.toLocaleString('en-IN'), meta: 'today' },
     { label: 'Resolved by AI', value: pct(k.resolvedByAi), meta: `${k.handoffs} handed to officers` },
   ];
+  const turnTotal = stageBudget.reduce((a, s) => a + s.ms, 0);
   const active = (kind) => providers[kind].options.find((o) => o.id === providers[kind].active);
   const open = (id) => navigate(`/calls?id=${encodeURIComponent(id)}`);
 
@@ -60,8 +63,9 @@ export default function Dashboard() {
     <>
       <div className="page-head">
         <div>
-          <h1>Dashboard</h1>
-          <p className="stamp"><span className="badge badge--live">{k.activeNow} live now</span> Availability {pct(k.availability, 2)} · Updated 10:58 IST</p>
+          <h1>Overview</h1>
+          <p className="finding">{k.p90 > TARGET ? <><b>p90 is {ms(k.p90)}, {ms(k.p90 - TARGET)} over target.</b> </> : null}The median voice turn takes {ms(turnTotal)} on the LLM path; language-model first token is its longest stage at {ms(stageBudget[3].ms)}.</p>
+          <p className="stamp"><span className="badge badge--live">{k.activeNow} live now</span><span>Availability {pct(k.availability, 2)}</span><span>Updated 10:58 IST</span></p>
         </div>
         <div className="page-head__actions">
           <div className="seg" role="group" aria-label="Time range">
@@ -78,7 +82,7 @@ export default function Dashboard() {
 
       <section className="kpis" aria-label="Key numbers">
         {cards.map((card) => (
-          <div key={card.label} className="kpi">
+          <div key={card.label} className={`kpi ${card.lead ? 'kpi--lead' : ''}`}>
             <div className="kpi__label">{card.label}</div>
             <div className="kpi__value">{card.value}</div>
             <div className={`kpi__meta ${card.good === false ? 'bad' : ''}`}>{card.meta}</div>
@@ -96,10 +100,9 @@ export default function Dashboard() {
           <div className="card__head">
             <div><h2>Response latency</h2><p>p50 and p90 per hour, split by cache/rules turns and LLM turns</p></div>
             <div className="legend">
-              <span><i style={{ background: 'var(--c-llm)' }} />LLM p50</span>
-              <span style={{ color: 'var(--c-llm-2)' }}><i className="dashed" />LLM p90</span>
-              <span><i style={{ background: 'var(--c-cache)' }} />Cache p50</span>
-              <span style={{ color: 'var(--c-cache-2)' }}><i className="dashed" />Cache p90</span>
+              <span><i style={{ background: 'var(--data)' }} />LLM turns</span>
+              <span><i style={{ background: 'var(--c-cache)' }} />Cache and rules turns</span>
+              <span className="note">solid p50, dashed p90</span>
             </div>
           </div>
           <div className="card__body">
@@ -108,14 +111,15 @@ export default function Dashboard() {
               labels={L.hours.map((h) => `${String(h).padStart(2, '0')}:00`)}
               threshold={{ value: 1000, label: '1,000 ms target' }}
               series={[
-                { name: 'LLM p50', values: L.llmP50, color: 'var(--c-llm)' },
-                { name: 'LLM p90', values: L.llmP90, color: 'var(--c-llm-2)', dashed: true },
+                { name: 'LLM p50', values: L.llmP50, color: 'var(--data)' },
+                { name: 'LLM p90', values: L.llmP90, color: 'var(--data)', dashed: true },
                 { name: 'Cache p50', values: L.cacheP50, color: 'var(--c-cache)' },
-                { name: 'Cache p90', values: L.cacheP90, color: 'var(--c-cache-2)', dashed: true },
+                { name: 'Cache p90', values: L.cacheP90, color: 'var(--c-cache)', dashed: true },
               ]}
             />
           </div>
         </section>
+        <div className="stackcol">
         <section className="card">
           <div className="card__head"><div><h2>Semantic cache</h2><p>Target: at least 40% gain</p></div></div>
           <div className="card__body cache-card">
@@ -135,6 +139,19 @@ export default function Dashboard() {
             </dl>
           </div>
         </section>
+          <section className="card">
+          <div className="card__head"><div><h2>Active providers</h2></div><button type="button" className="btn btn--sm" onClick={() => navigate('/models')}>Change</button></div>
+          <div className="card__body">
+            <dl className="kv">
+              {['llm', 'stt', 'tts'].map((kind) => (
+                <div key={kind} style={{ display: 'contents' }}>
+                  <dt>{{ llm: 'Language model', stt: 'Speech to text', tts: 'Text to speech' }[kind]}</dt><dd>{active(kind).name} <Badge status={active(kind).health} /></dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+        </div>
       </div>
 
       <div className="grid grid--2">
@@ -144,11 +161,11 @@ export default function Dashboard() {
         </section>
         <section className="card">
           <div className="card__head"><div><h2>Languages</h2><p>Share of turns by detected language</p></div></div>
-          <div className="card__body"><HBars items={languages.map((l) => ({ label: l.lang, value: l.share, color: 'var(--line-2)' }))} /></div>
+          <div className="card__body"><HBars items={languages.map((l) => ({ label: l.lang, value: l.share, color: '#b3b6bb' }))} /></div>
         </section>
       </div>
 
-      <div className="grid grid--3-1">
+      <div className="grid">
         <section className="card">
           <div className="card__head">
             <div><h2>Recent calls and chats</h2><p>Click a row to open the full audit trail</p></div>
@@ -171,20 +188,6 @@ export default function Dashboard() {
             </table>
           </div>
         </section>
-        <div className="grid" style={{ alignContent: 'start' }}>
-          <section className="card">
-            <div className="card__head"><div><h2>Active providers</h2></div><button type="button" className="btn btn--sm" onClick={() => navigate('/models')}>Change</button></div>
-            <div className="card__body">
-              <dl className="kv">
-                {['llm', 'stt', 'tts'].map((kind) => (
-                  <div key={kind} style={{ display: 'contents' }}>
-                    <dt>{{ llm: 'Language model', stt: 'Speech to text', tts: 'Text to speech' }[kind]}</dt><dd>{active(kind).name} <Badge status={active(kind).health} /></dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </section>
-        </div>
       </div>
     </>
   );

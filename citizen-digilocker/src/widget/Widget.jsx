@@ -2,8 +2,8 @@
 // Accessibility: dialog semantics, Esc closes, aria-live message log, per-message lang attribute,
 // visible focus. Targets WCAG 2.1 AA / GIGW 3.0.
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { ConfirmCard, OfflineHandoffCard, OtpCard, StatusCard } from './cards.jsx';
-import { backend, LANGUAGES } from './mockBackend.js';
+import { CallOfferCard, ConfirmCard, OfflineHandoffCard, OtpCard, StatusCard } from './cards.jsx';
+import { backend, LANGUAGES, SITE } from './mockBackend.js';
 import { STRINGS } from './strings.js';
 import './widget.css';
 import Icon from '../components/Icon.jsx';
@@ -16,7 +16,9 @@ function load(key) {
   try { return JSON.parse(sessionStorage.getItem(key) || 'null'); } catch { return null; }
 }
 
-const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
+const CALL = 'Call the assistant'; // quick reply that starts the voice call straight away
+
+const Widget = forwardRef(function Widget({ tenant = SITE.tenant }, ref) {
   const storeKey = `tn-assistant:${tenant}`;
   const saved = useRef(load(storeKey));
   const [open, setOpen] = useState(false);
@@ -82,6 +84,7 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
       else if (b.type === 'status') push({ kind: 'status', record: b.record });
       else if (b.type === 'confirm') push({ kind: 'confirm', block: b });
       else if (b.type === 'agent') push({ kind: 'agent', name: b.name, text: b.text });
+      else if (b.type === 'call') push({ kind: 'call' });
       else if (b.type === 'handoff') {
         if (!b.online) { push({ kind: 'offline', text: b.text }); continue; }
         const waitId = push({ kind: 'waiting', text: b.text });
@@ -215,7 +218,11 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
         return (
           <div key={m.id} className="tnw-quick" role="group" aria-label="Suggested replies">
             {m.options.map((o) => (
-              <button key={o.send} type="button" className="tnw-chip" disabled={busy} onClick={() => { removeMsg(m.id); ask(o.send, { quick: true }); }}>{o.label}</button>
+              o.send === CALL ? (
+                <button key={o.send} type="button" className="tnw-chip tnw-chip--call" onClick={startCall}><Icon name="phone" size={14} />{o.label}</button>
+              ) : (
+                <button key={o.send} type="button" className="tnw-chip" disabled={busy} onClick={() => { removeMsg(m.id); ask(o.send, { quick: true }); }}>{o.label}</button>
+              )
             ))}
           </div>
         );
@@ -226,6 +233,8 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
         );
       case 'status':
         return <StatusCard key={m.id} record={m.record} />;
+      case 'call':
+        return <CallOfferCard key={m.id} t={t} onCall={startCall} />;
       case 'confirm':
         return <ConfirmCard key={m.id} t={t} block={m.block} sessionId={sessionRef.current} onResult={(blocks) => renderBlocks(blocks, langRef.current)} />;
       case 'offline':
@@ -238,14 +247,16 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
   return (
     <div className={`tnw ${withAgent ? 'tnw--agent' : ''}`} data-open={open} onKeyDown={(e) => { if (e.key === 'Escape' && open) closePanel(); }}>
       {!open && (
+        // Two round buttons stacked bottom right: a pulsing direct-call button on top, the chat button below.
         <div className="tnw-launchers">
-          <button type="button" className="tnw-launcher tnw-launcher--call" aria-haspopup="dialog" aria-label={t.voice} onClick={() => openPanel({ call: true })}>
+          <button type="button" className="tnw-fab tnw-fab--call" aria-haspopup="dialog" aria-label={t.voice} onClick={() => openPanel({ call: true })}>
+            <span className="tnw-fab__ring" aria-hidden="true" />
             <Icon name="phone" size={22} />
-            <span className="tnw-launcher__label">{t.callLauncher}</span>
+            <span className="tnw-fab__tip" aria-hidden="true">{t.callHint}</span>
           </button>
-          <button ref={launcherRef} type="button" className="tnw-launcher" aria-haspopup="dialog" aria-expanded="false" aria-controls="tnw-panel" aria-label={t.open} onClick={() => openPanel()}>
-            <Icon name="chat" size={22} />
-            <span className="tnw-launcher__label">{t.launcher}</span>
+          <button ref={launcherRef} type="button" className="tnw-fab tnw-fab--chat" aria-haspopup="dialog" aria-expanded="false" aria-controls="tnw-panel" aria-label={t.open} onClick={() => openPanel()}>
+            <Icon name="chat" size={26} />
+            <span className="tnw-fab__tip" aria-hidden="true">{t.launcher}</span>
           </button>
         </div>
       )}
@@ -264,8 +275,8 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
                   {LANGUAGES.map((l) => <option key={l.code} value={l.code} lang={l.code}>{l.name}</option>)}
                 </select>
               </label>
-              <button type="button" className="tnw-icon tnw-voice" aria-label={t.voice} title={t.voice} onClick={startCall}>
-                <Icon name="phone" size={20} />
+              <button type="button" className="tnw-callbtn" aria-label={t.voice} title={t.voice} onClick={startCall}>
+                <Icon name="phone" size={16} /><span>{t.callShort}</span>
               </button>
               <button type="button" className="tnw-icon tnw-close" aria-label={t.close} onClick={closePanel}>
                 <Icon name="x" size={20} />
@@ -279,6 +290,9 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
             <label className="tnw-sr" htmlFor="tnw-text">{t.placeholder}</label>
             <textarea id="tnw-text" ref={inputRef} rows={1} maxLength={500} value={text} placeholder={t.placeholder} onChange={onInput}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e); }} />
+            <button type="button" className="tnw-send tnw-send--call" aria-label={t.voice} title={t.voice} onClick={startCall}>
+              <Icon name="phone" size={18} />
+            </button>
             <button type="submit" className="tnw-send" aria-label={t.send} disabled={busy}>
               <Icon name="send" size={18} />
             </button>

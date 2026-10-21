@@ -9,7 +9,9 @@ const callbackRef = () => `CB-${Math.floor(10000 + Math.random() * 90000)}`;
 
 function draftNotes(a) {
   const tickets = a.caller.tickets.length ? ` Grievance ${a.caller.tickets.join(', ')} registered.` : '';
-  return `${a.summary.intent} ${a.caller.verified ? 'Caller verified with OTP.' : 'Caller not verified.'} ${a.summary.points.slice(1, 3).join(' ')} Officer explained the instalment periods and next steps.${tickets}`;
+  const rated = Object.values(a.feedback || {});
+  const fb = rated.length ? ` Rated ${rated.length} suggested answer${rated.length === 1 ? '' : 's'} (${rated.filter((f) => f.vote === 'up').length} helpful, ${rated.filter((f) => f.vote === 'down').length} not).` : '';
+  return `${a.summary.intent} ${a.caller.verified ? 'Caller verified with OTP.' : 'Caller not verified.'} ${a.summary.points.slice(1, 3).join(' ')} Officer explained the next steps.${tickets}${fb}`;
 }
 
 function withActive(state, fn) {
@@ -34,7 +36,7 @@ function reducer(state, action) {
         ...state,
         queue: state.queue.filter((q) => q.id !== action.id),
         active: {
-          ...item, caller: { ...item.caller, tickets: [...item.caller.tickets] }, startedSec: 0, muted: false, held: false, ended: false, notes: '',
+          ...item, caller: { ...item.caller, tickets: [...item.caller.tickets] }, startedSec: 0, muted: false, held: false, ended: false, notes: '', feedback: {},
           transcript: [...item.history.map(([who, text]) => line(who, text, '')), line('system', `${state.officer.name} joined`)],
           liveQueue: [...item.live], awaitingCitizen: true,
           lastCitizen: item.history.filter(([w]) => w === 'citizen').pop()?.[1] || '',
@@ -64,6 +66,12 @@ function reducer(state, action) {
         const ended = { ...a, ended: true, transcript: [...a.transcript, line('system', a.channel === 'voice' ? 'Call ended' : 'Chat ended')] };
         return { ...ended, notes: draftNotes(ended) };
       });
+    // Officer feedback on a suggested answer: goes to the knowledge team with the snippet's source (mock).
+    case 'feedback':
+      return {
+        ...withActive(state, (a) => ({ ...a, feedback: { ...a.feedback, [action.key]: { vote: action.vote, reason: action.reason || '' } } })),
+        feedbackLog: [{ key: action.key, source: action.source, vote: action.vote, reason: action.reason || '', by: state.officer.email, session: state.active?.id }, ...(state.feedbackLog || []).filter((f) => !(f.key === action.key && f.session === state.active?.id))],
+      };
     case 'notes':
       return withActive(state, (a) => ({ ...a, notes: action.notes }));
     case 'verify':
@@ -95,11 +103,14 @@ const Ctx = createContext(null);
 
 // A new handoff arrives a little after start, to show the queue updating live.
 const LATE_HANDOFF = {
-  id: 's_c_2311', channel: 'chat', lang: 'Hinglish', waitedSec: 0, reason: 'Caller asked for a person',
-  caller: { label: 'Web visitor', phone: '—', verified: true, authLevel: 1, regNo: 'MH98•••••21', state: 'Maharashtra', ekyc: 'Pending', land: 'Verified', last: '₹2,000 on 12 Jun 2026', tickets: [] },
-  summary: { intent: 'Instalments on hold; wants to know how to finish e-KYC.', points: ['Verified with OTP (form).', 'Status shows e-KYC pending; payments on hold.', 'AI explained OTP and CSC e-KYC; citizen still wants a person.'], sentiment: 'Frustrated' },
-  history: [['ai', 'Your e-KYC is pending, so instalments are on hold. You can complete it with an Aadhaar OTP on the portal or at a CSC.'], ['citizen', 'OTP nahi aa raha, kisi se baat karni hai'], ['system', 'Transferred to officer · AI summary attached']],
-  live: [['citizen', 'Aadhaar se mobile number link nahi hai shayad. Ab kya karun?']],
+  id: 's_c_2311', channel: 'chat', lang: 'Hinglish', site: 'UMANG', waitedSec: 0, reason: 'Caller asked for a person',
+  caller: {
+    label: 'Web visitor', phone: '—', verified: true, authLevel: 1, tickets: [],
+    details: [['Request no.', 'UM26•••••190'], ['Service', 'LPG cylinder booking refund'], ['Status', 'Refund initiated'], ['Raised on', '17 Oct 2026']],
+  },
+  summary: { intent: 'Money deducted for an LPG booking that failed; refund not received yet.', points: ['Verified with OTP (form).', 'Status shows refund initiated on 17 Oct.', 'AI explained the 5–7 working day refund window; citizen still wants a person.'], sentiment: 'Frustrated' },
+  history: [['ai', 'Your refund was initiated on 17 October. It usually reaches your account in 5 to 7 working days.'], ['citizen', 'Paisa abhi tak nahi aaya, kisi se baat karni hai'], ['system', 'Transferred to officer · AI summary attached']],
+  live: [['citizen', 'Bank mein bhi check kiya, kuch nahi aaya. Ab kya karun?']],
 };
 
 export function AssistProvider({ children }) {

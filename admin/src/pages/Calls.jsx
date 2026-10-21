@@ -13,17 +13,17 @@ const STAGES = [
 
 // Sessions without a recorded transcript in the mock get a short generic one in their language.
 const GENERIC = {
-  English: ['en-IN', 'How much money do farmers get?', 'Eligible families get ₹6,000 a year in three instalments of ₹2,000.', 'Is e-KYC mandatory?', 'Yes, e-KYC is mandatory to keep receiving instalments.', 'PM-KISAN FAQs'],
-  Hindi: ['hi-IN', 'Kitna paisa milta hai?', 'Paatra parivaron ko saal mein ₹6,000 milte hain, ₹2,000 ki teen kiston mein.', 'e-KYC zaroori hai kya?', 'Haan, kiston ke liye e-KYC zaroori hai.', 'PM-KISAN FAQs (हिंदी)'],
-  Telugu: ['te-IN', 'రైతులకు ఎంత డబ్బు వస్తుంది?', 'అర్హులైన కుటుంబాలకు సంవత్సరానికి ₹6,000, ₹2,000 చొప్పున మూడు విడతల్లో వస్తుంది.', 'e-KYC తప్పనిసరా?', 'అవును, విడతలు అందుతూ ఉండాలంటే e-KYC తప్పనిసరి.', 'PM-KISAN FAQs (తెలుగు)'],
-  Malayalam: ['ml-IN', 'കർഷകർക്ക് എത്ര പണം ലഭിക്കും?', 'അർഹരായ കുടുംബങ്ങൾക്ക് വർഷം ₹6,000, ₹2,000 വീതം മൂന്ന് ഗഡുക്കളായി ലഭിക്കും.', 'e-KYC നിർബന്ധമാണോ?', 'അതെ, ഗഡുക്കൾ തുടർന്നും ലഭിക്കാൻ e-KYC നിർബന്ധമാണ്.', 'PM-KISAN FAQs (മലയാളം)'],
+  English: ['en-IN', 'Is a DigiLocker document valid as the original?', 'Yes. Documents issued in DigiLocker are at par with the originals under IT Rule 9A.', 'How do I check my EPF balance?', 'In UMANG, open EPFO, enter your UAN and verify the OTP.', 'UMANG user guide'],
+  Hindi: ['hi-IN', 'DigiLocker ka document original jaisa maany hai?', 'Haan, DigiLocker mein jaari dastavez IT niyam 9A ke tahat original ke barabar hain.', 'UMANG par EPF balance kaise dekhein?', 'UMANG mein EPFO chunein, UAN daalein aur OTP se balance dekhein.', 'DigiLocker & UMANG FAQs (हिंदी)'],
+  Telugu: ['te-IN', 'DigiLocker పత్రాలు అసలు పత్రాలతో సమానమా?', 'అవును, DigiLocker లో జారీ అయిన పత్రాలు IT నియమం 9A ప్రకారం అసలు పత్రాలతో సమానం.', 'UMANG లో EPF బ్యాలెన్స్ ఎలా చూడాలి?', 'UMANG లో EPFO ఎంచుకోండి, UAN నమోదు చేసి OTP తో బ్యాలెన్స్ చూడండి.', 'DigiLocker & UMANG FAQs (తెలుగు)'],
+  Malayalam: ['ml-IN', 'DigiLocker PIN മറന്നു, എന്ത് ചെയ്യണം?', 'സൈൻ ഇൻ പേജിൽ Forgot security PIN തിരഞ്ഞെടുത്ത് OTP ഉപയോഗിച്ച് PIN മാറ്റുക.', 'UMANG-ൽ EPF ബാലൻസ് എങ്ങനെ നോക്കാം?', 'UMANG-ൽ EPFO തിരഞ്ഞെടുത്ത്, UAN നൽകി OTP ഉപയോഗിച്ച് ബാലൻസ് കാണാം.', 'DigiLocker & UMANG FAQs (മലയാളം)'],
 };
 function genericTurns(s) {
   const [code, q1, a1, q2, a2, faq] = GENERIC[s.lang] || GENERIC.Hindi;
   return [
-    { role: 'bot', text: 'Namaste! This is an automated assistant for PM-KISAN.', route: 'greeting' },
+    { role: 'bot', text: 'Namaste! This is an automated assistant for DigiLocker and UMANG.', route: 'greeting' },
     { role: 'user', text: q1, lang: code },
-    { role: 'bot', text: a1, route: 'cache', sources: [['PM-KISAN Operational Guidelines', 2]], latency: { eos: 240, stt: 130, cache: 17, total: 402 }, cacheScore: 0.96 },
+    { role: 'bot', text: a1, route: 'cache', sources: [['DigiLocker user FAQs', 3]], latency: { eos: 240, stt: 130, cache: 17, total: 402 }, cacheScore: 0.96 },
     { role: 'user', text: q2, lang: code },
     { role: 'bot', text: a2, route: 'llm', sources: [[faq, 7]], model: 'claude-haiku-5-5', latency: { eos: 260, stt: 140, retrieval: 90, llm: 310, tts: 110, total: 910 } },
   ];

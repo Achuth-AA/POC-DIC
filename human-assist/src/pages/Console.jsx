@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast.jsx';
 import { useAssist } from '../store.jsx';
 import Icon from '../components/Icon.jsx';
@@ -26,9 +27,7 @@ export default function Console() {
     <div className="workspace">
       <Queue />
       <main className="convo" aria-live="polite">{a ? <Conversation key={a.id} /> : <Empty done={state.done} />}</main>
-      <aside className="assist" aria-label="AI assist">{a ? <AssistPanel key={a.id} /> : (
-        <div className="panel"><h3>AI assist</h3><p className="note">The AI summary, caller details and live answer suggestions appear here when you take a conversation.</p></div>
-      )}</aside>
+      <aside className="assist" aria-label="AI assist">{a ? <AssistPanel key={a.id} /> : <Today />}</aside>
     </div>
   );
 }
@@ -54,39 +53,80 @@ function Queue() {
   return (
     <aside className="queue" aria-labelledby="queueTitle">
       <div className="queue__head">
-        <h2 id="queueTitle">Waiting for an officer</h2>
+        <h1 id="queueTitle">Waiting for an officer</h1>
         <span className="count">{items.length}</span>
       </div>
       <ul className="queue__list">
-        {items.length === 0 && <li className="queue__empty"><Icon name="checkCircle" size={28} />No one is waiting.</li>}
+        {items.length === 0 && <li className="queue__empty"><Icon name="checkCircle" size={20} />No one is waiting. New handoffs appear here with their AI summary.</li>}
         {items.map((q, idx) => (
           <li key={q.id} className={`qitem ${q.priority ? 'qitem--priority' : ''}`}>
             <div className="qitem__top">
               <span className="qitem__ch"><Icon name={q.channel === 'voice' ? 'phone' : 'chat'} size={16} title={q.channel === 'voice' ? 'Voice call' : 'Web chat'} /></span>
               <strong>{q.caller.label}</strong>
-              <span className="tag">{q.lang}</span>
-              {q.priority && <span className="tag tag--bad">Priority</span>}
-              <span className="qitem__wait">{mmss(q.waitedSec)}</span>
+              <span className="qitem__wait" title="Waiting for">{mmss(q.waitedSec)}</span>
             </div>
-            <p className="qitem__reason">{q.reason}</p>
             <p className="qitem__intent">{q.summary.intent}</p>
-            <button type="button" className={`btn btn--sm ${idx === 0 ? 'btn--primary' : ''}`} disabled={!canAccept} onClick={() => accept(q)}>
-              {q.channel === 'voice' ? 'Answer call' : 'Join chat'}
-            </button>
+            <p className="qitem__reason">{q.reason}</p>
+            <div className="qitem__meta">
+              {q.priority && <span className="tag tag--bad">Priority</span>}
+              <span className="tag">{q.lang}</span>
+              {q.site && <span className="tag">{q.site}</span>}
+              <button type="button" className={`btn btn--sm ${idx === 0 ? 'btn--primary' : ''}`} disabled={!canAccept} onClick={() => accept(q)}>
+                {q.channel === 'voice' ? 'Answer call' : 'Join chat'}
+              </button>
+            </div>
           </li>
         ))}
       </ul>
+      {/* Reference data under a short queue: the callbacks already booked, so the column is never an empty box. */}
+      <section className="booked" aria-labelledby="bookedTitle">
+        <h2 id="bookedTitle">Callbacks booked<Link to="/callbacks">View all</Link></h2>
+        <ul>
+          {state.callbacks.filter((c) => c.status !== 'done').slice(0, 3).map((c) => (
+            <li key={c.ref}><span><span>{c.when}</span>{c.status === 'due' && <span className="tag tag--warn">Due now</span>}</span><span>{c.summary}</span></li>
+          ))}
+        </ul>
+      </section>
       <p className="queue__note">Handoffs arrive with the AI summary and the full transcript. Priority items (safety triggers) are listed first.</p>
     </aside>
+  );
+}
+
+// The details column before a conversation is taken: today's numbers for this officer, not an empty box.
+function Today() {
+  const { state } = useAssist();
+  const due = state.callbacks.filter((c) => c.status === 'due').length;
+  const rated = (state.feedbackLog || []).length;
+  return (
+    <>
+      <section className="panel">
+        <h3>Today</h3>
+        <dl className="kv">
+          <dt>Waiting now</dt><dd>{state.queue.length}</dd>
+          <dt>Completed</dt><dd>{state.done}</dd>
+          <dt>Callbacks due</dt><dd>{due}</dd>
+          <dt>Answers rated</dt><dd>{rated}</dd>
+        </dl>
+      </section>
+      <section className="panel">
+        <h3>AI assist</h3>
+        <p className="note">The AI summary, the caller’s details and suggested answers appear here when you take a conversation.</p>
+      </section>
+    </>
   );
 }
 
 function Empty({ done }) {
   return (
     <div className="convo__empty">
-      <div className="convo__empty-icon" aria-hidden="true"><Icon name="headset" size={28} /></div>
+      <div className="convo__empty-icon" aria-hidden="true"><Icon name="headset" size={24} /></div>
       <h2>No active conversation</h2>
-      <p>{done ? `${done} completed this session. ` : ''}Accept a handoff from the queue. You will see the AI summary, the full transcript and suggested answers.</p>
+      <p>{done ? `${done} completed this session. ` : ''}Answer the first handoff in the queue. When you do:</p>
+      <ol className="convo__empty-list">
+        <li>The transcript so far opens here and continues live.</li>
+        <li>The AI summary and the caller’s details appear on the right.</li>
+        <li>Suggested answers follow what the caller says; rate them so the knowledge team can fix weak ones.</li>
+      </ol>
     </div>
   );
 }
@@ -179,13 +219,48 @@ function suggestionsFor(knowledge, text) {
     .map((x) => x.k);
 }
 
+const REASONS = ['Wrong answer', 'Out of date', 'Not relevant'];
+
+// Helpful / not helpful on a suggested answer. A "not helpful" asks for one reason; both go to the knowledge
+// team with the snippet's source, so a bad passage can be fixed in the next knowledge-base version.
+function SuggestionFeedback({ s }) {
+  const { state, dispatch } = useAssist();
+  const toast = useToast();
+  const key = `${s.source} p.${s.page}`;
+  const fb = state.active.feedback?.[key];
+  const [asking, setAsking] = useState(false);
+  const send = (vote, reason) => {
+    dispatch({ type: 'feedback', key, source: key, vote, reason });
+    setAsking(false);
+    if (vote === 'down') toast(`Thanks. "${key}" is flagged for the knowledge team${reason ? `: ${reason.toLowerCase()}` : ''}.`);
+  };
+  return (
+    <div className="sugg__fb">
+      {fb && !asking ? (
+        <span className="sugg__fb-done">{fb.vote === 'up' ? 'Marked helpful' : `Flagged: ${fb.reason || 'not helpful'}`}<button type="button" className="linkbtn" onClick={() => (fb.vote === 'down' ? setAsking(true) : send('down'))}>Change</button></span>
+      ) : (
+        <>
+          <span>Helpful?</span>
+          <button type="button" className="fbbtn" aria-label={`Helpful: ${key}`} aria-pressed={fb?.vote === 'up'} onClick={() => send('up')}><Icon name="thumbUp" size={16} /></button>
+          <button type="button" className="fbbtn" aria-label={`Not helpful: ${key}`} aria-pressed={asking || fb?.vote === 'down'} onClick={() => setAsking((v) => !v)}><Icon name="thumbDown" size={16} /></button>
+        </>
+      )}
+      {asking && (
+        <div className="sugg__reasons" role="group" aria-label="Why was it not helpful?">
+          {REASONS.map((x) => <button key={x} type="button" className="chip" onClick={() => send('down', x)}>{x}</button>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AssistPanel() {
   const { state, dispatch, ticketId } = useAssist();
   const toast = useToast();
   const a = state.active;
   const c = a.caller;
   const [form, setForm] = useState(null); // 'ticket' | 'callback' | null
-  const [category, setCategory] = useState('Instalment not received');
+  const [category, setCategory] = useState(state.categories[0]);
   const [details, setDetails] = useState(a.summary.intent);
   const [slot, setSlot] = useState('Tomorrow · 9 am – 12 pm');
   const [disposition, setDisposition] = useState('');
@@ -234,19 +309,15 @@ function AssistPanel() {
         <h3>Caller</h3>
         <dl className="kv">
           <dt>Verification</dt><dd>{c.verified ? `OTP · level ${c.authLevel}` : 'Not verified. Verify before sharing personal data.'}</dd>
-          {c.regNo && (
-            <>
-              <dt>Registration</dt><dd className="mono">{c.regNo}</dd><dt>State</dt><dd>{c.state}</dd>
-              <dt>Land records</dt><dd>{c.land}</dd><dt>e-KYC</dt><dd>{c.ekyc}</dd><dt>Last instalment</dt><dd>{c.last}</dd>
-            </>
-          )}
+          {a.site && <><dt>Came from</dt><dd>{a.site}</dd></>}
+          {c.details?.map(([k, v]) => <Fragment key={k}><dt>{k}</dt><dd>{v}</dd></Fragment>)}
           <dt>Tickets</dt><dd>{c.tickets.length ? c.tickets.join(', ') : 'None'}</dd>
         </dl>
         {!c.verified && <button type="button" className="btn btn--sm" disabled={a.ended} onClick={() => dispatch({ type: 'verify' })}>Send OTP to caller</button>}
       </section>
 
       <section className="panel">
-        <h3>Suggested answers <span className="note">from the knowledge base</span></h3>
+        <h3>Suggested answers <span className="note">from the knowledge base{Object.keys(a.feedback || {}).length ? `, ${Object.keys(a.feedback).length} rated` : ''}</span></h3>
         <p className="assist__quote">For: “{a.lastCitizen || a.summary.intent}”</p>
         {suggestions.length === 0 && <p className="note">No matching knowledge yet. Suggestions appear as the citizen speaks.</p>}
         {suggestions.map((s) => (
@@ -256,6 +327,7 @@ function AssistPanel() {
               <span className="sugg__src"><Icon name="file" size={14} />{s.source} p.{s.page}</span>{s.internal && <span className="tag tag--teal">Internal</span>}
               <button type="button" className="btn btn--sm" onClick={() => use(s)}>{a.channel === 'chat' ? 'Insert' : 'Mark as said'}</button>
             </div>
+            <SuggestionFeedback s={s} />
           </div>
         ))}
       </section>
@@ -265,13 +337,13 @@ function AssistPanel() {
         <div className="actions">
           <button type="button" className="btn btn--sm" disabled={a.ended} onClick={() => setForm(form === 'ticket' ? null : 'ticket')}><Icon name="clipboard" size={16} />Register grievance</button>
           <button type="button" className="btn btn--sm" onClick={() => setForm(form === 'callback' ? null : 'callback')}><Icon name="calendar" size={16} />Schedule callback</button>
-          <button type="button" className="btn btn--sm" disabled={a.ended} onClick={() => { dispatch({ type: 'line', who: 'system', text: 'SMS sent: link to the beneficiary status page' }); toast('SMS sent (demo).'); }}><Icon name="mail" size={16} />Send SMS with link</button>
+          <button type="button" className="btn btn--sm" disabled={a.ended} onClick={() => { dispatch({ type: 'line', who: 'system', text: 'SMS sent: link to track the request' }); toast('SMS sent (demo).'); }}><Icon name="mail" size={16} />Send SMS with link</button>
         </div>
         {form === 'ticket' && (
           <form className="mini" onSubmit={createTicket}>
             <label className="field"><span>Category</span>
               <select value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option>Instalment not received</option><option>Wrong bank details</option><option>e-KYC problem</option><option>Other</option>
+                {state.categories.map((x) => <option key={x}>{x}</option>)}
               </select>
             </label>
             <label className="field"><span>Details</span><textarea rows={2} value={details} onChange={(e) => setDetails(e.target.value)} /></label>

@@ -4,7 +4,7 @@ import { useStore } from '../store.jsx';
 import Icon from './Icon.jsx';
 
 const NAV = [
-  { to: '/', label: 'Dashboard', icon: 'grid' },
+  { to: '/', label: 'Overview', icon: 'grid' },
   { to: '/knowledge', label: 'Knowledge base', icon: 'book' },
   { to: '/models', label: 'Models & voice', icon: 'sparkle' },
   { to: '/calls', label: 'Calls & chats', icon: 'phone' },
@@ -21,31 +21,41 @@ export function Mark({ className }) {
   );
 }
 
-// Sibling apps. Set in Vercel project env vars (or .env); an empty value hides the link.
+// Sibling apps (agent console and the two citizen sites). Set in Vercel project env vars (or .env); an empty value hides the link.
 const LINKS = [
   ['Open agent console', import.meta.env.VITE_AGENT_CONSOLE_URL],
-  ['Open citizen demo', import.meta.env.VITE_CITIZEN_DEMO_URL],
+  ['Open DigiLocker demo', import.meta.env.VITE_DIGILOCKER_DEMO_URL],
+  ['Open UMANG demo', import.meta.env.VITE_UMANG_DEMO_URL],
 ].filter(([, url]) => url);
 
 export default function Layout() {
-  const { kb } = useStore();
+  const { kb, user } = useStore();
   const [navOpen, setNavOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setNavOpen(false), [location.pathname]);
+  const here = NAV.find((n) => (n.to === '/' ? location.pathname === '/' : location.pathname.startsWith(n.to)));
 
   return (
     <div className={`shell ${navOpen ? 'nav-open' : ''}`}>
       <aside className="sidebar">
         <NavLink className="side-brand" to="/">
           <Mark className="side-brand__mark" />
-          <span><strong>Voice AI Platform</strong><small>Admin console · POC</small></span>
+          <span><strong>Voice AI Platform</strong><small>Admin console</small></span>
         </NavLink>
+        <div className="switcher">
+          <label className="sr-only" htmlFor="helpline">Helpline</label>
+          <select id="helpline" defaultValue={kb.tenant}>
+            <option value={kb.tenant}>{kb.tenantName}</option>
+            <option disabled>Add a helpline (later)</option>
+          </select>
+          <p className="switcher__meta"><span>Knowledge <b>v{kb.version}</b></span><span>India-hosted POC</span></p>
+        </div>
         <nav aria-label="Admin">
           <ul className="side-nav">
             {NAV.map((n) => (
               <li key={n.to}>
                 <NavLink to={n.to} end={n.to === '/'}>
-                  <Icon name={n.icon} size={20} />
+                  <Icon name={n.icon} size={16} />
                   <span>{n.label}</span>
                 </NavLink>
               </li>
@@ -53,10 +63,17 @@ export default function Layout() {
           </ul>
         </nav>
         {LINKS.length > 0 && (
-          <div className="side-foot">
-            {LINKS.map(([label, url]) => <a key={label} href={url} target="_blank" rel="noopener noreferrer">{label}<Icon name="arrowUpRight" size={14} /></a>)}
-          </div>
+          <>
+            <p className="side-label">Other apps</p>
+            <div className="side-foot" style={{ marginTop: 0, paddingTop: 0 }}>
+              {LINKS.map(([label, url]) => <a key={label} href={url} target="_blank" rel="noopener noreferrer">{label}<Icon name="arrowUpRight" size={14} /></a>)}
+            </div>
+          </>
         )}
+        <div className="side-user" style={{ marginTop: 'auto' }}>
+          <span className="avatar" aria-hidden="true">{user.initials}</span>
+          <span><strong>{user.name}</strong><small>{user.email}</small></span>
+        </div>
       </aside>
 
       <div className="main">
@@ -64,17 +81,7 @@ export default function Layout() {
           <button type="button" className="icon-btn menu-btn" aria-label="Open menu" aria-expanded={navOpen} onClick={() => setNavOpen((o) => !o)}>
             <Icon name="menu" size={22} />
           </button>
-          <label className="tenant">
-            <span className="sr-only">Helpline</span>
-            <select aria-label="Helpline" defaultValue={kb.tenant}>
-              <option value={kb.tenant}>{kb.tenantName}</option>
-              <option disabled>Add helpline (later)</option>
-            </select>
-          </label>
-          <span className="pill pill--accent" title="Knowledge base version used by live calls">KB v{kb.version}</span>
-          <span className="pill pill--ok" title="Where the POC runs"><span className="dot" />POC · India-hosted</span>
-          <span className="top-spacer" />
-          <span className="who"><span className="avatar" aria-hidden="true">AD</span><span className="who__name">admin@dic</span></span>
+          <span className="topbar__title">{here ? here.label : 'Admin console'}</span>
         </header>
         <main className="content" id="main"><Outlet /></main>
       </div>

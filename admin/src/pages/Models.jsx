@@ -10,7 +10,7 @@ import { useStore } from '../store.jsx';
 import Icon from '../components/Icon.jsx';
 
 const LANGS = [['auto', 'Auto-detect'], ['en', 'English'], ['hi', 'हिन्दी · Hindi'], ['te', 'తెలుగు · Telugu'], ['ml', 'മലയാളം · Malayalam']];
-const SUGGESTIONS = ['What documents are needed to register?', 'When are instalments paid?', 'e-KYC తప్పనిసరా?', 'ഏതൊക്കെ രേഖകൾ വേണം?'];
+const SUGGESTIONS = ['Is a DigiLocker document valid as the original?', 'How do I check my EPF balance on UMANG?', 'UMANG లో EPF బ్యాలెన్స్ ఎలా చూడాలి?', 'DigiLocker PIN മറന്നു, എന്ത് ചെയ്യണം?'];
 const STAGE_COLORS = { eos: 'var(--c-eos)', stt: 'var(--c-stt)', cache: 'var(--c-cache)', retrieval: 'var(--c-ret)', llm: 'var(--c-llm)', tts: 'var(--c-tts)' };
 
 function snapshot(providers, settings, cache) {
@@ -32,7 +32,7 @@ const LABELS = {
 };
 
 export default function Models() {
-  const { providers, setProviders, settings, setSettings, cache, setCache, changeLog, logChange } = useStore();
+  const { providers, setProviders, settings, setSettings, cache, setCache, changeLog, logChange, user } = useStore();
   const toast = useToast();
   const saved = useMemo(() => snapshot(providers, settings, cache), [providers, settings, cache]);
   const [draft, setDraft] = useState(saved);
@@ -68,7 +68,7 @@ export default function Models() {
       if (typeof v === 'boolean') return v ? 'on' : 'off';
       return String(v);
     };
-    changes.forEach((k) => logChange({ at: stamp(), who: 'admin@dic', kind: LABELS[k], from: pretty(k, saved[k]), to: pretty(k, draft[k]), note: 'Saved from Models & voice' }));
+    changes.forEach((k) => logChange({ at: stamp(), who: user.email, kind: LABELS[k], from: pretty(k, saved[k]), to: pretty(k, draft[k]), note: 'Saved from Models & voice' }));
     toast(`Saved. New calls use ${name('llm', draft.llm)} · ${name('stt', draft.stt)} · ${name('tts', draft.tts)}.`);
   }
 
@@ -225,7 +225,7 @@ function Playground({ draft, opt }) {
       <div className="play__log" ref={logRef} aria-live="polite">
         {messages.length === 0 && (
           <div className="play__empty">
-            <h3>How can I help farmers today?</h3>
+            <h3>How can I help citizens today?</h3>
             <p>Answers come from the published knowledge base, in English, Hindi, Telugu or Malayalam. Ask the same thing twice to see a cache hit.</p>
             <div className="play__suggest">{SUGGESTIONS.map((s) => <button key={s} type="button" className="chip" onClick={() => run(s)}>{s}</button>)}</div>
           </div>

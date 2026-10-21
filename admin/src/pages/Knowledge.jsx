@@ -1,6 +1,7 @@
-// Knowledge base: one "Update knowledge base" action (add files or a web page → read, chunk, embed,
-// safety-check, publish as a new version, clear the cache), the list of live sources, and a retrieval test.
-import { useEffect, useMemo, useRef, useState } from 'react';
+// Knowledge base: the list of live sources, version status and a retrieval test. Adding sources happens on
+// its own page, Edit knowledge library (./EditLibrary.jsx).
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
 import { Drawer, Modal } from '../components/Overlay.jsx';
 import { useToast } from '../components/Toast.jsx';
@@ -9,7 +10,6 @@ import { MIN_CONFIDENCE, retrieve } from '../lib/retrieve.js';
 import { useStore } from '../store.jsx';
 import Icon from '../components/Icon.jsx';
 
-const SUPPORTED = ['PDF', 'DOCX', 'TXT', 'CSV', 'XLSX'];
 const FILTERS = [['all', 'All'], ['public', 'Public'], ['internal', 'Officers only'], ['tool', 'Data tables']];
 
 function langOf(doc) {
@@ -20,17 +20,17 @@ function langOf(doc) {
 }
 const sizeOf = (doc) => (doc.rows ? `${doc.rows.toLocaleString('en-IN')} rows` : `${doc.chunks} passages${doc.pages ? ` · ${doc.pages} pages` : ''}`);
 
-const TYPE_ICON = { URL: 'globe', CSV: 'table', XLSX: 'table' };
+const TYPE_ICON = { URL: 'globe', CSV: 'table', XLSX: 'table', API: 'code' };
 
 export default function Knowledge() {
   const { documents, setDocuments, chunks, kb, applyKbChange, cache, clearCache, warmCache, changeLog } = useStore();
   const toast = useToast();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [previewId, setPreviewId] = useState(null);
   const [menuId, setMenuId] = useState(null);
   const [removing, setRemoving] = useState(null);
-  const [updating, setUpdating] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
   const live = documents.filter((d) => d.status === 'published');
@@ -67,13 +67,13 @@ export default function Knowledge() {
       <div className="page-head">
         <div>
           <h1>Knowledge base</h1>
-          <p>What the assistant answers from, on voice, chat and agent assist. Add or replace documents with one update: it becomes a new version and the old cached answers are cleared automatically.</p>
+          <p>What the assistant answers from, on voice, chat and agent assist. Add or replace sources with one update: it becomes a new version and the old cached answers are cleared automatically.</p>
         </div>
         <div className="page-head__actions">
-          <button type="button" className="btn btn--primary" onClick={() => setUpdating(true)}>
+          <Link className="btn btn--primary" to="/knowledge/edit">
             <Icon name="plus" />
-            Update knowledge base
-          </button>
+            Edit knowledge library
+          </Link>
         </div>
       </div>
 
@@ -115,7 +115,9 @@ export default function Knowledge() {
                 <span style={{ minWidth: 0 }}>
                   <span className="source__title" style={{ display: 'block' }}>{d.title}</span>
                   <span className="source__meta">
-                    <span>{d.type}</span><span>·</span><span>{sizeOf(d)}</span><span>·</span><span>{langOf(d)}</span><span>·</span><span>v{d.version} · {d.updated}</span>
+                    <span>{d.type}</span><span>{sizeOf(d)}</span><span>{langOf(d)}</span><span>v{d.version}, {d.updated}</span>
+                    {d.history?.length > 0 && <span>replaced v{d.history[0].version}</span>}
+                    {d.refreshDays && <span>refreshes every {d.refreshDays} days</span>}
                     {d.priority === 'high' && <Badge tone="warn">Priority</Badge>}
                   </span>
                 </span>
@@ -128,6 +130,7 @@ export default function Knowledge() {
                   {menuId === d.id && (
                     <div className="menu" role="menu">
                       <button type="button" role="menuitem" onClick={() => { setMenuId(null); setPreviewId(d.id); }}><Icon name="eye" />Preview</button>
+                      <button type="button" role="menuitem" onClick={() => { setMenuId(null); navigate(`/knowledge/edit?replace=${d.id}`); }}><Icon name="upload" />Upload new version</button>
                       <button type="button" role="menuitem" onClick={() => { setMenuId(null); reindex(d); }}><Icon name="refresh" />Re-index</button>
                       <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenuId(null); setRemoving(d); }}><Icon name="trash" />Remove…</button>
                     </div>
@@ -150,156 +153,12 @@ export default function Knowledge() {
         <p>Its passages and embeddings are deleted, the knowledge base moves to v{kb.version + 1}, and {cache.entries.toLocaleString('en-IN')} cached answers are cleared. Calls stop using it straight away.</p>
       </Modal>
 
-      <UpdateKnowledge open={updating} onClose={() => setUpdating(false)} />
     </>
   );
 }
 
-// ---------- the one-button update ----------
-function UpdateKnowledge({ open, onClose }) {
-  const { kb, cache, setDocuments, setChunks, applyKbChange, warmCache } = useStore();
-  const toast = useToast();
-  const [items, setItems] = useState([]);
-  const [url, setUrl] = useState('');
-  const [note, setNote] = useState('');
-  const [over, setOver] = useState(false);
-  const [phase, setPhase] = useState('pick'); // pick | run | done
-  const [step, setStep] = useState(0);
-  const [result, setResult] = useState(null);
-  const fileRef = useRef(null);
-  const timers = useRef([]);
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
-
-  function reset() { setItems([]); setUrl(''); setNote(''); setPhase('pick'); setStep(0); setResult(null); }
-  function close() { if (phase === 'run') return; onClose(); setTimeout(reset, 200); }
-
-  function addFiles(files) {
-    const next = [];
-    files.forEach((f) => {
-      const ext = (f.name.split('.').pop() || '').toUpperCase();
-      if (!SUPPORTED.includes(ext)) { toast(`${f.name}: use PDF, DOCX, TXT, CSV or XLSX`); return; }
-      next.push({ id: `${f.name}-${f.size}-${Math.random().toString(36).slice(2, 5)}`, name: f.name, type: ext, size: f.size, audience: ext === 'CSV' || ext === 'XLSX' ? 'tool' : 'public' });
-    });
-    setItems((x) => [...x, ...next]);
-  }
-
-  function addUrl(e) {
-    e.preventDefault();
-    const u = url.trim();
-    if (!/^https?:\/\/\S+\.\S+/.test(u)) { toast('Enter a full web address, starting with https://'); return; }
-    setItems((x) => [...x, { id: u, name: u.replace(/^https?:\/\//, ''), type: 'URL', size: 0, audience: 'public' }]);
-    setUrl('');
-  }
-
-  const steps = [
-    `Reading ${items.length} source${items.length === 1 ? '' : 's'}`,
-    'Splitting into passages with page numbers',
-    'Creating embeddings (bge-m3)',
-    'Checking for hidden instructions',
-    `Publishing as version v${kb.version + 1}`,
-    `Clearing ${cache.entries.toLocaleString('en-IN')} cached answers from v${kb.version}`,
-  ];
-
-  function run() {
-    setPhase('run');
-    setStep(0);
-    steps.forEach((_, i) => timers.current.push(setTimeout(() => setStep(i + 1), 650 * (i + 1))));
-    timers.current.push(setTimeout(() => {
-      const added = items.map((it) => {
-        const id = `u${Date.now()}${Math.random().toString(36).slice(2, 5)}`;
-        const structured = it.audience === 'tool';
-        return {
-          id, title: it.type === 'URL' ? it.name : it.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '), file: it.name, type: it.type, audience: it.audience,
-          version: 1, status: 'published', size: it.type === 'URL' ? 'web page' : `${Math.max(1, Math.round(it.size / 1024))} KB`,
-          ...(structured ? { rows: 50 + Math.floor(Math.random() * 900), lookup: 'id', chunks: 0 } : { chunks: 8 + Math.floor(Math.random() * 40), pages: it.type === 'URL' ? undefined : 2 + Math.floor(Math.random() * 20) }),
-          updated: stamp(), by: 'admin@dic',
-        };
-      });
-      setDocuments((docs) => [...added, ...docs]);
-      setChunks((c) => ({ ...c, ...Object.fromEntries(added.map((d) => [d.id, [{ page: 1, section: 'Preview', text: `Passages from ${d.file} appear here once the ingestion worker processes the real file.` }]])) }));
-      const r = applyKbChange(note.trim() || `Added ${added.map((d) => `"${d.title}"`).join(', ')}`);
-      setResult({ ...r, added: added.length });
-      setPhase('done');
-    }, 650 * steps.length + 400));
-  }
-
-  return (
-    <Modal open={open} onClose={close} title={phase === 'done' ? 'Knowledge base updated' : 'Update knowledge base'}
-      footer={phase === 'pick' ? (
-        <><button type="button" className="btn" onClick={close}>Cancel</button>
-          <button type="button" className="btn btn--primary" disabled={!items.length} onClick={run}>Update knowledge base</button></>
-      ) : phase === 'done' ? (
-        <><button type="button" className="btn" onClick={() => toast(`Pre-warmed ${warmCache()} FAQ answers for KB v${result.to}.`)}>Pre-warm cache</button>
-          <button type="button" className="btn btn--primary" onClick={close}>Done</button></>
-      ) : null}>
-      {phase === 'pick' && (
-        <div className="upd">
-          <div className="upd__pick">
-            <button type="button" className={`upd__tile ${over ? 'is-over' : ''}`} onClick={() => fileRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
-              onDrop={(e) => { e.preventDefault(); setOver(false); addFiles([...e.dataTransfer.files]); }}>
-              <Icon name="upload" size={22} />
-              <strong>Upload files</strong><span>PDF, DOCX, TXT, CSV, XLSX</span>
-            </button>
-            <form className="upd__tile" style={{ cursor: 'default' }} onSubmit={addUrl}>
-              <Icon name="link" size={22} />
-              <strong>Add a web page</strong>
-              <span className="upd__url" style={{ width: '100%' }}>
-                <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" aria-label="Web page address" />
-                <button type="submit" className="btn btn--sm">Add</button>
-              </span>
-            </form>
-          </div>
-          <input ref={fileRef} type="file" multiple accept=".pdf,.docx,.txt,.csv,.xlsx" className="sr-only" tabIndex={-1}
-            onChange={(e) => { addFiles([...e.target.files]); e.target.value = ''; }} />
-
-          {items.length > 0 && (
-            <ul className="upd__list">
-              {items.map((it) => (
-                <li key={it.id} className="upd__item">
-                  <span className="source__icon" title={it.type}><Icon name={TYPE_ICON[it.type] || 'file'} size={20} /></span>
-                  <span className="source__title">{it.name}</span>
-                  <select value={it.audience} aria-label={`Who can use ${it.name}`} disabled={it.audience === 'tool'}
-                    onChange={(e) => setItems((x) => x.map((y) => (y.id === it.id ? { ...y, audience: e.target.value } : y)))}>
-                    {it.audience === 'tool' ? <option value="tool">Data table</option> : <><option value="public">Public</option><option value="internal">Officers only</option></>}
-                  </select>
-                  <button type="button" className="icon-btn" aria-label={`Remove ${it.name}`} onClick={() => setItems((x) => x.filter((y) => y.id !== it.id))}><Icon name="x" /></button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <label className="field"><span>What changed? (optional, shown in the version history)</span>
-            <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. New e-KYC circular for November" /></label>
-          <p className="note" style={{ margin: 0 }}>Live now: v{kb.version}. Updating publishes v{kb.version + 1} and clears {cache.entries.toLocaleString('en-IN')} cached answers, so callers never get an outdated answer.</p>
-        </div>
-      )}
-
-      {phase === 'run' && (
-        <div className="upd" role="status" aria-live="polite">
-          <div className="upd__bar"><span style={{ width: `${(step / steps.length) * 100}%` }} /></div>
-          <ol className="upd__steps">
-            {steps.map((s, i) => (
-              <li key={s} className={i < step ? 'is-done' : i === step ? 'is-active' : ''}>
-                <span className="tick" aria-hidden="true">{i < step ? <Icon name="check" size={14} /> : ''}</span><span>{s}</span><span className="note">{i < step ? 'done' : ''}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-
-      {phase === 'done' && result && (
-        <div className="upd__done">
-          <div className="big" aria-hidden="true"><Icon name="check" size={26} /></div>
-          <h3>Live as v{result.to}</h3>
-          <p>{result.added} source{result.added === 1 ? '' : 's'} added · {result.cleared.toLocaleString('en-IN')} cached answers from v{result.from} cleared. New calls and chats use it now.</p>
-        </div>
-      )}
-    </Modal>
-  );
-}
-
 function RetrievalTest({ documents, chunks }) {
-  const [q, setQ] = useState('What documents are needed to register?');
+  const [q, setQ] = useState('Is a DigiLocker document valid as the original?');
   const [as, setAs] = useState('public');
   const [result, setResult] = useState(null);
   const confident = result && result.length > 0 && result[0].score >= MIN_CONFIDENCE;
@@ -356,7 +215,17 @@ function Preview({ doc, chunks, onReindex, onRemove }) {
         {doc.pages && <><dt>Pages</dt><dd>{doc.pages}</dd></>}
         {doc.lookup && <><dt>Lookup column</dt><dd><code>{doc.lookup}</code> · needs OTP verification</dd></>}
         <dt>Updated</dt><dd>{doc.updated} by {doc.by}</dd>
+        <dt>File</dt><dd className="mono">{doc.file}</dd>
       </dl>
+      {doc.history?.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: 14, marginBottom: 8 }}>Earlier versions</h3>
+          <p className="note" style={{ marginTop: 0 }}>Replaced versions are kept for the audit trail only. Their passages are deleted, so no answer can cite them.</p>
+          <ol className="versions">
+            {doc.history.map((h) => <li key={h.version}><strong>v{h.version}, {h.file}</strong><span>{h.passages} passages, uploaded {h.updated} by {h.by}</span><span className="note">Replaced {h.retired}</span></li>)}
+          </ol>
+        </div>
+      )}
       {table ? (
         <div>
           <h3 style={{ fontSize: 14, marginBottom: 8 }}>Data preview</h3>

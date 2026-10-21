@@ -18,10 +18,13 @@ export function LineChart({ labels, series, height = 240, threshold, unit = 'ms'
   const [ref, w] = useWidth();
   const h = height;
   const pad = { l: 48, r: 16, t: 16, b: 28 };
-  const max = Math.ceil(Math.max(...series.flatMap((s) => s.values), threshold ? threshold.value : 0) / 200) * 200;
+  // Round, even steps with the top tick above the maximum (never on it).
+  const top = Math.max(...series.flatMap((s) => s.values), threshold ? threshold.value : 0);
+  const step = [100, 200, 250, 500, 1000, 2000, 5000].find((st) => top / st <= 5) || 10000;
+  const max = (Math.floor(top / step) + 1) * step;
   const x = (i) => pad.l + (i * (w - pad.l - pad.r)) / (labels.length - 1);
   const y = (v) => pad.t + (1 - v / max) * (h - pad.t - pad.b);
-  const grid = [0, 1, 2, 3, 4].map((g) => (max / 4) * g);
+  const grid = Array.from({ length: max / step + 1 }, (_, g) => g * step);
 
   return (
     <div ref={ref}>
@@ -41,11 +44,9 @@ export function LineChart({ labels, series, height = 240, threshold, unit = 'ms'
         )}
         {series.map((s) => {
           const d = s.values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-          const last = s.values.length - 1;
-          return (
+                    return (
             <g key={s.name}>
-              <path d={d} fill="none" stroke={s.color} strokeWidth="2.2" strokeDasharray={s.dashed ? '5 4' : undefined} strokeLinejoin="round" />
-              <circle cx={x(last)} cy={y(s.values[last])} r="3.5" fill={s.color}><title>{`${s.name}: ${s.values[last]} ${unit}`}</title></circle>
+              <path d={d} fill="none" stroke={s.color} strokeWidth="2" strokeDasharray={s.dashed ? '5 4' : undefined} strokeLinejoin="round" />
             </g>
           );
         })}
