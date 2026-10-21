@@ -19,11 +19,6 @@ const LINKS = [
 export default function Layout() {
   const { kb } = useStore();
   const [navOpen, setNavOpen] = useState(false);
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || 'dark');
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    try { localStorage.setItem('admin-theme', theme); } catch { /* per-browser preference only */ }
-  }, [theme]);
   const location = useLocation();
   useEffect(() => setNavOpen(false), [location.pathname]);
 
@@ -68,12 +63,6 @@ export default function Layout() {
           <span className="pill pill--accent" title="Knowledge base version used by live calls">KB v{kb.version}</span>
           <span className="pill pill--ok" title="Where the POC runs"><span className="dot" />POC · India-hosted</span>
           <span className="top-spacer" />
-          <button type="button" className="icon-btn" aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            title={theme === 'dark' ? 'Light theme' : 'Dark theme'} onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}>
-            {theme === 'dark'
-              ? <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
-              : <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" /></svg>}
-          </button>
           <span className="who"><span className="avatar" aria-hidden="true">AD</span><span className="who__name">admin@dic</span></span>
         </header>
         <main className="content" id="main"><Outlet /></main>

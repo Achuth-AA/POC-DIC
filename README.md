@@ -79,8 +79,7 @@ Notes:
 - **Voice call from the page:** "📞 Talk to the assistant" in the hero, "Call the assistant" in Help, or the
   **Call** button next to the chat button. The call screen has a language picker, timer, mute and end call. It is
   the screen only for now; the browser voice call connects once the LiveKit voice agent is built.
-- **Admin look:** dark by default, in the style of Google AI Studio; the sun/moon button in the top bar switches
-  to light (remembered per browser).
+- **Admin look:** a clean light theme in the style of Google AI Studio.
 - **Admin → Knowledge base:** press **Update knowledge base**, add files or a web page, choose who can use each
   (Public / Officers only), optionally say what changed, and press the button once. It shows each step (read,
   split into passages, embed, check for hidden instructions, publish as the next version, clear the old cached

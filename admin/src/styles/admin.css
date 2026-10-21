@@ -1,37 +1,8 @@
-/* Admin console styles. Dark by default (AI Studio-like), with a light theme.
-   Theme is set on <html data-theme="dark|light">. */
-:root, :root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #0d0e10;
-  --surface: #16171a;
-  --surface-2: #1d1f23;
-  --surface-3: #26282d;
-  --ink: #e8eaed;
-  --muted: #9aa0a6;
-  --line: #2a2c31;
-  --line-2: #3a3d43;
-  --accent: #8ab4f8;
-  --accent-2: #aecbfa;
-  --accent-ink: #0b1a33;
-  --accent-soft: rgba(138, 180, 248, .14);
-  --side: #0d0e10;
-  --side-ink: #bdc1c6;
-  --side-active: rgba(138, 180, 248, .16);
-  --ok: #81c995; --ok-bg: rgba(129, 201, 149, .14);
-  --warn: #fdd663; --warn-bg: rgba(253, 214, 99, .13);
-  --bad: #f28b82; --bad-bg: rgba(242, 139, 130, .14);
-  --info: #8ab4f8; --info-bg: rgba(138, 180, 248, .14);
-  --violet: #c58af9; --violet-bg: rgba(197, 138, 249, .15);
-  --track: #2a2c31;
-  --c-llm: #8ab4f8; --c-llm-2: #5f7fb8; --c-cache: #81c995; --c-cache-2: #4f8a62;
-  --c-eos: #c58af9; --c-stt: #78d9ec; --c-ret: #fdd663; --c-tool: #ff8bcb; --c-tts: #6dd58c;
+/* Admin console styles. Light theme in a clean, AI Studio-like style. */
+:root {
+  color-scheme: light;
   --gem: linear-gradient(90deg, #4285f4, #9b72cb 55%, #d96570);
   --radius: 14px;
-  --shadow: 0 1px 0 rgba(255, 255, 255, .03) inset;
-  --scrim: rgba(0, 0, 0, .6);
-}
-:root[data-theme="light"] {
-  color-scheme: light;
   --bg: #f6f8fc;
   --surface: #ffffff;
   --surface-2: #f1f4f9;
@@ -225,7 +196,7 @@ svg .ring-num { font-size: 22px; font-weight: 600; fill: var(--ink); }
 .budget__bar i { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .45; }
 
 /* Drawer + modal */
-.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100vw); background: var(--surface); border-left: 1px solid var(--line); box-shadow: -10px 0 40px rgba(0,0,0,.35); z-index: 60; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .2s ease; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100vw); background: var(--surface); border-left: 1px solid var(--line); box-shadow: -10px 0 40px rgba(60,64,67,.18); z-index: 60; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .2s ease; }
 .drawer.is-open { transform: none; }
 .drawer[hidden] { display: none; }
 .drawer__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
@@ -235,14 +206,13 @@ svg .ring-num { font-size: 22px; font-weight: 600; fill: var(--ink); }
 .modal { position: fixed; inset: 0; display: grid; place-items: center; z-index: 70; padding: 16px; }
 .modal[hidden] { display: none; }
 .modal .scrim { z-index: 0; backdrop-filter: blur(2px); }
-.modal__box { position: relative; z-index: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 24px 80px rgba(0,0,0,.45); }
+.modal__box { position: relative; z-index: 1; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 24px 80px rgba(60,64,67,.25); }
 .modal__box header { padding: 20px 22px 0; }
 .modal__box .modal__body { padding: 12px 22px; color: var(--muted); }
 .modal__box footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 22px 20px; }
 
 .toasts { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: grid; gap: 8px; z-index: 90; }
-.toast { background: var(--surface-3); color: var(--ink); border: 1px solid var(--line-2); padding: 10px 16px; border-radius: 12px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.35); transition: opacity .3s, transform .3s; }
-:root[data-theme="light"] .toast { background: #303134; color: #fff; border-color: transparent; }
+.toast { background: #303134; color: #fff; padding: 10px 16px; border-radius: 12px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.2); transition: opacity .3s, transform .3s; }
 .toast.is-out { opacity: 0; transform: translateY(8px); }
 
 .empty { color: var(--muted); text-align: center; padding: 28px; }
@@ -257,7 +227,7 @@ svg .ring-num { font-size: 22px; font-weight: 600; fill: var(--ink); }
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }
   .sidebar { position: fixed; left: 0; top: 0; z-index: 50; width: 260px; transform: translateX(-100%); transition: transform .2s; }
-  .shell.nav-open .sidebar { transform: none; box-shadow: 10px 0 40px rgba(0,0,0,.45); }
+  .shell.nav-open .sidebar { transform: none; box-shadow: 10px 0 40px rgba(60,64,67,.25); }
   .menu-btn { display: grid; }
   .content { padding: 16px; }
   .topbar { padding: 10px 16px; flex-wrap: wrap; }
