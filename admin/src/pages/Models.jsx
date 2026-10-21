@@ -7,6 +7,7 @@ import { useToast } from '../components/Toast.jsx';
 import { stamp } from '../lib/format.js';
 import { MIN_CONFIDENCE, retrieve } from '../lib/retrieve.js';
 import { useStore } from '../store.jsx';
+import Icon from '../components/Icon.jsx';
 
 const LANGS = [['auto', 'Auto-detect'], ['en', 'English'], ['hi', 'हिन्दी · Hindi'], ['te', 'తెలుగు · Telugu'], ['ml', 'മലയാളം · Malayalam']];
 const SUGGESTIONS = ['What documents are needed to register?', 'When are instalments paid?', 'e-KYC తప్పనిసరా?', 'ഏതൊക്കെ രേഖകൾ വേണം?'];
@@ -130,7 +131,7 @@ export default function Models() {
             </div>
 
             <details className="run__adv">
-              <summary>Advanced settings</summary>
+              <summary>Advanced settings<Icon name="chevronDown" /></summary>
               <div className="run__group">
                 <ProviderSelect label="Backup text to speech" kind="tts" value={draft.ttsBackup} providers={providers} exclude={draft.tts} onChange={(v) => set('ttsBackup', v)} compact />
                 <Slider label="Passages per answer" value={draft.topK} min={2} max={8} step={1} onChange={(v) => set('topK', v)} hint="Knowledge passages given to the model after reranking." />
@@ -224,7 +225,7 @@ function Playground({ draft, opt }) {
       <div className="play__log" ref={logRef} aria-live="polite">
         {messages.length === 0 && (
           <div className="play__empty">
-            <h3 className="gem-text">How can I help farmers today?</h3>
+            <h3>How can I help farmers today?</h3>
             <p>Answers come from the published knowledge base, in English, Hindi, Telugu or Malayalam. Ask the same thing twice to see a cache hit.</p>
             <div className="play__suggest">{SUGGESTIONS.map((s) => <button key={s} type="button" className="chip" onClick={() => run(s)}>{s}</button>)}</div>
           </div>
@@ -234,7 +235,7 @@ function Playground({ draft, opt }) {
         ) : (
           <div key={i} className="play__msg play__msg--bot">
             <p>{m.text}</p>
-            {m.sources && <div className="play__src">📄 {m.sources.map((h) => `${h.doc.title} p.${h.chunk.page}`).join(' · ')}</div>}
+            {m.sources && <div className="play__src"><Icon name="file" size={14} />{m.sources.map((h) => `${h.doc.title} p.${h.chunk.page}`).join(' · ')}</div>}
             <div className="play__meta">
               <span className={`route route--${m.route}`}>{m.route}</span>
               {m.model && <span>{m.model}</span>}
@@ -250,7 +251,7 @@ function Playground({ draft, opt }) {
         <label className="sr-only" htmlFor="playText">Question</label>
         <textarea id="playText" rows={1} value={text} placeholder="Type a question…" onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); run(text); } }} />
-        <button type="submit" className="btn btn--primary" disabled={busy || !text.trim()}>Run ▸</button>
+        <button type="submit" className="btn btn--primary" disabled={busy || !text.trim()}><Icon name="send" size={16} />Run</button>
       </form>
     </section>
   );

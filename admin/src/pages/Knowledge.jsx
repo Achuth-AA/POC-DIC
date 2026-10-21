@@ -7,6 +7,7 @@ import { useToast } from '../components/Toast.jsx';
 import { stamp } from '../lib/format.js';
 import { MIN_CONFIDENCE, retrieve } from '../lib/retrieve.js';
 import { useStore } from '../store.jsx';
+import Icon from '../components/Icon.jsx';
 
 const SUPPORTED = ['PDF', 'DOCX', 'TXT', 'CSV', 'XLSX'];
 const FILTERS = [['all', 'All'], ['public', 'Public'], ['internal', 'Officers only'], ['tool', 'Data tables']];
@@ -18,6 +19,8 @@ function langOf(doc) {
   return 'English';
 }
 const sizeOf = (doc) => (doc.rows ? `${doc.rows.toLocaleString('en-IN')} rows` : `${doc.chunks} passages${doc.pages ? ` · ${doc.pages} pages` : ''}`);
+
+const TYPE_ICON = { URL: 'globe', CSV: 'table', XLSX: 'table' };
 
 export default function Knowledge() {
   const { documents, setDocuments, chunks, kb, applyKbChange, cache, clearCache, warmCache, changeLog } = useStore();
@@ -67,8 +70,8 @@ export default function Knowledge() {
           <p>What the assistant answers from, on voice, chat and agent assist. Add or replace documents with one update: it becomes a new version and the old cached answers are cleared automatically.</p>
         </div>
         <div className="page-head__actions">
-          <button type="button" className="btn btn--gem" onClick={() => setUpdating(true)}>
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+          <button type="button" className="btn btn--primary" onClick={() => setUpdating(true)}>
+            <Icon name="plus" />
             Update knowledge base
           </button>
         </div>
@@ -88,7 +91,7 @@ export default function Knowledge() {
           </div>
         </div>
         {showHistory && (
-          <div className="card__body" style={{ borderTop: '1px solid var(--line)' }}>
+          <div className="card__body" style={{ borderTop: '1px solid var(--line)', paddingTop: 16 }}>
             <ol className="versions" aria-label="Version history">
               {history.map((h) => <li key={`${h.at}-${h.to}`}><strong>{h.to}</strong><span>{h.note}</span><span className="note">{h.at} · {h.who}</span></li>)}
             </ol>
@@ -108,11 +111,11 @@ export default function Knowledge() {
             {rows.length === 0 && <li className="empty">No sources match.</li>}
             {rows.map((d) => (
               <li key={d.id} className="source" onClick={() => setPreviewId(d.id)}>
-                <span className={`source__icon source__icon--${d.type}`} aria-hidden="true">{d.type}</span>
+                <span className="source__icon"><Icon name={TYPE_ICON[d.type] || 'file'} size={20} /></span>
                 <span style={{ minWidth: 0 }}>
                   <span className="source__title" style={{ display: 'block' }}>{d.title}</span>
                   <span className="source__meta">
-                    <span>{sizeOf(d)}</span><span>·</span><span>{langOf(d)}</span><span>·</span><span>v{d.version} · {d.updated}</span>
+                    <span>{d.type}</span><span>·</span><span>{sizeOf(d)}</span><span>·</span><span>{langOf(d)}</span><span>·</span><span>v{d.version} · {d.updated}</span>
                     {d.priority === 'high' && <Badge tone="warn">Priority</Badge>}
                   </span>
                 </span>
@@ -120,13 +123,13 @@ export default function Knowledge() {
                 <span className="source__menu" onClick={(e) => e.stopPropagation()}>
                   <button type="button" className="icon-btn" aria-label={`Options for ${d.title}`} aria-expanded={menuId === d.id}
                     onClick={(e) => { e.stopPropagation(); setMenuId(menuId === d.id ? null : d.id); }}>
-                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" /></svg>
+                    <Icon name="more" size={20} />
                   </button>
                   {menuId === d.id && (
                     <div className="menu" role="menu">
-                      <button type="button" role="menuitem" onClick={() => { setMenuId(null); setPreviewId(d.id); }}>Preview</button>
-                      <button type="button" role="menuitem" onClick={() => { setMenuId(null); reindex(d); }}>Re-index</button>
-                      <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenuId(null); setRemoving(d); }}>Remove…</button>
+                      <button type="button" role="menuitem" onClick={() => { setMenuId(null); setPreviewId(d.id); }}><Icon name="eye" />Preview</button>
+                      <button type="button" role="menuitem" onClick={() => { setMenuId(null); reindex(d); }}><Icon name="refresh" />Re-index</button>
+                      <button type="button" role="menuitem" className="is-danger" onClick={() => { setMenuId(null); setRemoving(d); }}><Icon name="trash" />Remove…</button>
                     </div>
                   )}
                 </span>
@@ -224,7 +227,7 @@ function UpdateKnowledge({ open, onClose }) {
     <Modal open={open} onClose={close} title={phase === 'done' ? 'Knowledge base updated' : 'Update knowledge base'}
       footer={phase === 'pick' ? (
         <><button type="button" className="btn" onClick={close}>Cancel</button>
-          <button type="button" className="btn btn--gem" disabled={!items.length} onClick={run}>Update knowledge base</button></>
+          <button type="button" className="btn btn--primary" disabled={!items.length} onClick={run}>Update knowledge base</button></>
       ) : phase === 'done' ? (
         <><button type="button" className="btn" onClick={() => toast(`Pre-warmed ${warmCache()} FAQ answers for KB v${result.to}.`)}>Pre-warm cache</button>
           <button type="button" className="btn btn--primary" onClick={close}>Done</button></>
@@ -235,11 +238,11 @@ function UpdateKnowledge({ open, onClose }) {
             <button type="button" className={`upd__tile ${over ? 'is-over' : ''}`} onClick={() => fileRef.current?.click()}
               onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
               onDrop={(e) => { e.preventDefault(); setOver(false); addFiles([...e.dataTransfer.files]); }}>
-              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" /></svg>
+              <Icon name="upload" size={22} />
               <strong>Upload files</strong><span>PDF, DOCX, TXT, CSV, XLSX</span>
             </button>
             <form className="upd__tile" style={{ cursor: 'default' }} onSubmit={addUrl}>
-              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg>
+              <Icon name="link" size={22} />
               <strong>Add a web page</strong>
               <span className="upd__url" style={{ width: '100%' }}>
                 <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" aria-label="Web page address" />
@@ -254,13 +257,13 @@ function UpdateKnowledge({ open, onClose }) {
             <ul className="upd__list">
               {items.map((it) => (
                 <li key={it.id} className="upd__item">
-                  <span className={`source__icon source__icon--${it.type}`} aria-hidden="true">{it.type}</span>
+                  <span className="source__icon" title={it.type}><Icon name={TYPE_ICON[it.type] || 'file'} size={20} /></span>
                   <span className="source__title">{it.name}</span>
                   <select value={it.audience} aria-label={`Who can use ${it.name}`} disabled={it.audience === 'tool'}
                     onChange={(e) => setItems((x) => x.map((y) => (y.id === it.id ? { ...y, audience: e.target.value } : y)))}>
                     {it.audience === 'tool' ? <option value="tool">Data table</option> : <><option value="public">Public</option><option value="internal">Officers only</option></>}
                   </select>
-                  <button type="button" className="icon-btn" aria-label={`Remove ${it.name}`} onClick={() => setItems((x) => x.filter((y) => y.id !== it.id))}>✕</button>
+                  <button type="button" className="icon-btn" aria-label={`Remove ${it.name}`} onClick={() => setItems((x) => x.filter((y) => y.id !== it.id))}><Icon name="x" /></button>
                 </li>
               ))}
             </ul>
@@ -277,7 +280,7 @@ function UpdateKnowledge({ open, onClose }) {
           <ol className="upd__steps">
             {steps.map((s, i) => (
               <li key={s} className={i < step ? 'is-done' : i === step ? 'is-active' : ''}>
-                <span className="tick" aria-hidden="true">{i < step ? '✓' : ''}</span><span>{s}</span><span className="note">{i < step ? 'done' : ''}</span>
+                <span className="tick" aria-hidden="true">{i < step ? <Icon name="check" size={14} /> : ''}</span><span>{s}</span><span className="note">{i < step ? 'done' : ''}</span>
               </li>
             ))}
           </ol>
@@ -286,8 +289,8 @@ function UpdateKnowledge({ open, onClose }) {
 
       {phase === 'done' && result && (
         <div className="upd__done">
-          <div className="big" aria-hidden="true">✨</div>
-          <h3>Live as <span className="gem-text">v{result.to}</span></h3>
+          <div className="big" aria-hidden="true"><Icon name="check" size={26} /></div>
+          <h3>Live as v{result.to}</h3>
           <p>{result.added} source{result.added === 1 ? '' : 's'} added · {result.cleared.toLocaleString('en-IN')} cached answers from v{result.from} cleared. New calls and chats use it now.</p>
         </div>
       )}
@@ -342,7 +345,7 @@ function Preview({ doc, chunks, onReindex, onRemove }) {
   const table = tables[doc.id];
   return (
     <>
-      <div className="pipeline" aria-label="Ingestion steps">{['Read', 'Chunked', 'Embedded', 'Safety-checked', 'Live'].map((s) => <span key={s} className="done">✓ {s}</span>)}</div>
+      <div className="pipeline" aria-label="Ingestion steps">{['Read', 'Chunked', 'Embedded', 'Safety-checked', 'Live'].map((s) => <span key={s} className="done"><Icon name="check" size={13} />{s}</span>)}</div>
       <dl className="kv">
         <dt>Version</dt><dd>v{doc.version}</dd>
         <dt>Language</dt><dd>{langOf(doc)}</dd>

@@ -2,7 +2,7 @@ const STATUS = {
   published: ['ok', 'Published'], draft: ['warn', 'Draft'], processing: ['info', 'Processing'], failed: ['bad', 'Failed'], archived: ['muted', 'Archived'],
   resolved: ['ok', 'Resolved'], handoff: ['info', 'Handoff'], callback: ['warn', 'Callback'], abandoned: ['muted', 'Abandoned'], live: ['live', 'Live'],
   ok: ['ok', 'Healthy'], degraded: ['warn', 'Degraded'], down: ['bad', 'Down'],
-  public: ['info', 'Public'], internal: ['violet', 'Internal'], tool: ['muted', 'Tool data'],
+  public: ['info', 'Public'], internal: ['teal', 'Internal'], tool: ['muted', 'Tool data'],
 };
 
 // <Badge status="published" />, or <Badge tone="warn">Custom</Badge>

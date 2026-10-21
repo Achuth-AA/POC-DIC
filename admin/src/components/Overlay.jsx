@@ -1,5 +1,6 @@
 // Drawer and Modal with Escape-to-close and focus on open.
 import { useEffect, useRef, useState } from 'react';
+import Icon from './Icon.jsx';
 
 function useEscape(open, onClose) {
   useEffect(() => {
@@ -32,7 +33,7 @@ export function Drawer({ open, onClose, title, subtitle, children }) {
       <aside className={`drawer ${slid ? 'is-open' : ''}`} role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden={!shown}>
         <div className="drawer__head">
           <div><h2 id="drawerTitle">{title}</h2><div className="note">{subtitle}</div></div>
-          <button type="button" ref={closeRef} className="icon-btn" onClick={onClose} aria-label="Close preview">✕</button>
+          <button type="button" ref={closeRef} className="icon-btn" onClick={onClose} aria-label="Close preview"><Icon name="x" size={20} /></button>
         </div>
         <div className="drawer__body">{shown ? children : null}</div>
       </aside>
@@ -48,8 +49,8 @@ export function Modal({ open, onClose, title, children, footer }) {
   return (
     <div className="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div className="scrim is-open" onClick={onClose} />
-      <div className="modal__box" style={{ position: 'relative' }} ref={boxRef}>
-        <header><h2 id="modalTitle" style={{ fontSize: 16 }}>{title}</h2></header>
+      <div className="modal__box" ref={boxRef}>
+        <header><h2 id="modalTitle">{title}</h2></header>
         <div className="modal__body">{children}</div>
         <footer>{footer}</footer>
       </div>

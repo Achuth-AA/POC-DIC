@@ -79,7 +79,7 @@ Notes:
 - **Voice call from the page:** "📞 Talk to the assistant" in the hero, "Call the assistant" in Help, or the
   **Call** button next to the chat button. The call screen has a language picker, timer, mute and end call. It is
   the screen only for now; the browser voice call connects once the LiveKit voice agent is built.
-- **Admin look:** a clean light theme in the style of Google AI Studio.
+- **Look (all three apps):** light only, in a plain Google style. It uses Google Sans with Noto for Hindi, Telugu and Malayalam, and one outline icon set (`src/components/Icon.jsx`) instead of emoji. Colour is kept for data and state, with one main action per screen. Motion is short (under 300 ms) and respects reduced-motion settings. The dashboard's signature element is the *One voice turn* timeline: each stage of a reply is drawn against the 1,000 ms target.
 - **Admin → Knowledge base:** press **Update knowledge base**, add files or a web page, choose who can use each
   (Public / Officers only), optionally say what changed, and press the button once. It shows each step (read,
   split into passages, embed, check for hidden instructions, publish as the next version, clear the old cached

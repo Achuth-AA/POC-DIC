@@ -1,6 +1,7 @@
 // Demo citizen page. Layout follows common Government of India portal conventions
 // (accessibility strip, tricolour rule, plain sections). No official emblems or logos.
 import { useEffect, useState } from 'react';
+import Icon from './components/Icon.jsx';
 
 function AskButton({ ask, call, assistant, className, children }) {
   const opts = call ? { call: true } : ask ? { ask } : {};
@@ -64,13 +65,12 @@ export default function SchemePage({ assistant }) {
         <section className="hero">
           <div className="container hero__inner">
             <div className="hero__text">
-              <p className="eyebrow">Central Sector Scheme · Direct Benefit Transfer</p>
               <h1>Income support of ₹6,000 a year for landholding farmer families</h1>
               <p className="lead">Paid in three equal instalments of ₹2,000, directly into the bank accounts of eligible farmers.</p>
               <p className="hero__langs">Ask by chat or voice call in English, हिन्दी, తెలుగు or മലയാളം. No phone needed.</p>
               <div className="hero__actions">
                 <AskButton assistant={assistant} ask="Am I eligible for PM-KISAN?" className="btn btn--primary">Check eligibility with the assistant</AskButton>
-                <AskButton assistant={assistant} call className="btn btn--ghost">📞 Talk to the assistant</AskButton>
+                <AskButton assistant={assistant} call className="btn btn--ghost"><Icon name="phone" />Talk to the assistant</AskButton>
               </div>
             </div>
             <ul className="facts" aria-label="Key facts">
@@ -87,22 +87,22 @@ export default function SchemePage({ assistant }) {
             <h2 id="corner-title">Farmers corner</h2>
             <div className="corner__grid">
               <a className="tile" href="#apply">
-                <span className="tile__icon" aria-hidden="true">📝</span>
+                <span className="tile__icon" aria-hidden="true"><Icon name="edit" size={20} /></span>
                 <span className="tile__title">New farmer registration</span>
                 <span className="tile__text">Register through the portal, a CSC or your state nodal officer.</span>
               </a>
               <AskButton assistant={assistant} ask="What is my beneficiary status?" className="tile">
-                <span className="tile__icon" aria-hidden="true">🔎</span>
+                <span className="tile__icon" aria-hidden="true"><Icon name="search" size={20} /></span>
                 <span className="tile__title">Know your status</span>
                 <span className="tile__text">Ask the assistant. It verifies you with an OTP first.</span>
               </AskButton>
               <AskButton assistant={assistant} ask="How do I complete e-KYC?" className="tile">
-                <span className="tile__icon" aria-hidden="true">🪪</span>
+                <span className="tile__icon" aria-hidden="true"><Icon name="idCard" size={20} /></span>
                 <span className="tile__title">e-KYC</span>
                 <span className="tile__text">e-KYC is mandatory to keep receiving instalments.</span>
               </AskButton>
               <AskButton assistant={assistant} ask="I want to register a complaint" className="tile">
-                <span className="tile__icon" aria-hidden="true">📣</span>
+                <span className="tile__icon" aria-hidden="true"><Icon name="megaphone" size={20} /></span>
                 <span className="tile__title">Register a grievance</span>
                 <span className="tile__text">Payment not received or wrong details? Raise it here.</span>
               </AskButton>
@@ -187,8 +187,8 @@ export default function SchemePage({ assistant }) {
                 to an officer. The voice call runs in your browser, so you don't need a phone.</p>
             </div>
             <div className="help__actions">
-              <AskButton assistant={assistant} call className="btn btn--navy">📞 Call the assistant</AskButton>
-              <AskButton assistant={assistant} className="btn btn--primary">💬 Chat with the assistant</AskButton>
+              <AskButton assistant={assistant} call className="btn btn--navy"><Icon name="phone" />Call the assistant</AskButton>
+              <AskButton assistant={assistant} className="btn btn--primary"><Icon name="chat" />Chat with the assistant</AskButton>
             </div>
           </div>
         </section>

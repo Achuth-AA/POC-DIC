@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from '../components/Toast.jsx';
 import { useAssist } from '../store.jsx';
+import Icon from '../components/Icon.jsx';
 
 const mmss = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 const WHO = { ai: 'AI assistant', citizen: 'Citizen', officer: 'You' };
@@ -57,11 +58,11 @@ function Queue() {
         <span className="count">{items.length}</span>
       </div>
       <ul className="queue__list">
-        {items.length === 0 && <li className="queue__empty">No one is waiting. 🎉</li>}
-        {items.map((q) => (
+        {items.length === 0 && <li className="queue__empty"><Icon name="checkCircle" size={28} />No one is waiting.</li>}
+        {items.map((q, idx) => (
           <li key={q.id} className={`qitem ${q.priority ? 'qitem--priority' : ''}`}>
             <div className="qitem__top">
-              <span className="qitem__ch" aria-label={q.channel === 'voice' ? 'Voice call' : 'Web chat'}>{q.channel === 'voice' ? '📞' : '💬'}</span>
+              <span className="qitem__ch"><Icon name={q.channel === 'voice' ? 'phone' : 'chat'} size={16} title={q.channel === 'voice' ? 'Voice call' : 'Web chat'} /></span>
               <strong>{q.caller.label}</strong>
               <span className="tag">{q.lang}</span>
               {q.priority && <span className="tag tag--bad">Priority</span>}
@@ -69,7 +70,7 @@ function Queue() {
             </div>
             <p className="qitem__reason">{q.reason}</p>
             <p className="qitem__intent">{q.summary.intent}</p>
-            <button type="button" className="btn btn--primary btn--sm" disabled={!canAccept} onClick={() => accept(q)}>
+            <button type="button" className={`btn btn--sm ${idx === 0 ? 'btn--primary' : ''}`} disabled={!canAccept} onClick={() => accept(q)}>
               {q.channel === 'voice' ? 'Answer call' : 'Join chat'}
             </button>
           </li>
@@ -83,7 +84,7 @@ function Queue() {
 function Empty({ done }) {
   return (
     <div className="convo__empty">
-      <div className="convo__empty-icon" aria-hidden="true">🎧</div>
+      <div className="convo__empty-icon" aria-hidden="true"><Icon name="headset" size={28} /></div>
       <h2>No active conversation</h2>
       <p>{done ? `${done} completed this session. ` : ''}Accept a handoff from the queue. You will see the AI summary, the full transcript and suggested answers.</p>
     </div>
@@ -122,22 +123,22 @@ function Conversation() {
     <>
       <div className="convo__head">
         <div className="convo__who">
-          <span className="convo__ch" aria-hidden="true">{voice ? '📞' : '💬'}</span>
+          <span className="convo__ch" aria-hidden="true"><Icon name={voice ? 'phone' : 'chat'} size={20} /></span>
           <div>
             <h2>{a.caller.label} <span className="tag">{a.lang}</span>
-              {a.caller.verified ? <span className="tag tag--ok">✓ OTP verified</span> : <span className="tag tag--warn">Not verified</span>}</h2>
+              {a.caller.verified ? <span className="tag tag--ok"><Icon name="check" size={14} />OTP verified</span> : <span className="tag tag--warn">Not verified</span>}</h2>
             <p>{voice ? a.caller.phone : 'Web chat'} · session <span className="mono">{a.id}</span> · {mmss(a.startedSec)}{a.ended ? ' · ended' : ''}</p>
           </div>
         </div>
         <div className="convo__controls">
           {voice && (
             <>
-              <button type="button" className={`ctl ${a.muted ? 'is-on' : ''}`} aria-pressed={a.muted} disabled={a.ended} onClick={() => dispatch({ type: 'toggle', key: 'muted' })}>🎙️ {a.muted ? 'Unmute' : 'Mute'}</button>
-              <button type="button" className={`ctl ${a.held ? 'is-on' : ''}`} aria-pressed={a.held} disabled={a.ended} onClick={() => dispatch({ type: 'toggle', key: 'held' })}>⏸ {a.held ? 'Resume' : 'Hold'}</button>
+              <button type="button" className={`ctl ${a.muted ? 'is-on' : ''}`} aria-pressed={a.muted} disabled={a.ended} onClick={() => dispatch({ type: 'toggle', key: 'muted' })}><Icon name={a.muted ? 'micOff' : 'mic'} size={16} />{a.muted ? 'Unmute' : 'Mute'}</button>
+              <button type="button" className={`ctl ${a.held ? 'is-on' : ''}`} aria-pressed={a.held} disabled={a.ended} onClick={() => dispatch({ type: 'toggle', key: 'held' })}><Icon name={a.held ? 'play' : 'pause'} size={16} />{a.held ? 'Resume' : 'Hold'}</button>
             </>
           )}
-          <button type="button" className="ctl" disabled={a.ended} onClick={() => toast('Transfer to supervisor or state nodal officer (demo). The AI summary goes with it.')}>↪ Transfer</button>
-          <button type="button" className="ctl ctl--end" disabled={a.ended} onClick={end}>{voice ? 'End call' : 'End chat'}</button>
+          <button type="button" className="ctl" disabled={a.ended} onClick={() => toast('Transfer to supervisor or state nodal officer (demo). The AI summary goes with it.')}><Icon name="transfer" size={16} />Transfer</button>
+          <button type="button" className="ctl ctl--end" disabled={a.ended} onClick={end}>{voice && <Icon name="phoneOff" size={16} />}{voice ? 'End call' : 'End chat'}</button>
         </div>
       </div>
       {a.held && <p className="banner">Caller is on hold with music. The AI will not speak while on hold.</p>}
@@ -152,14 +153,14 @@ function Conversation() {
           )))}
       </ol>
       {voice ? (
-        <p className="convo__foot">🔴 Live transcript of both sides (speech-to-text). Suggestions update as the caller speaks.</p>
+        <p className="convo__foot"><span className="live-dot" aria-hidden="true" />Live transcript of both sides (speech-to-text). Suggestions update as the caller speaks.</p>
       ) : !a.ended && (
         <form className="composer" onSubmit={send}>
           <label className="sr-only" htmlFor="reply">Reply to citizen</label>
           <textarea id="reply" rows={2} value={reply} onChange={(e) => setReply(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) send(e); }}
             placeholder="Type a reply… (Enter to send, Shift+Enter for a new line)" />
-          <button className="btn btn--primary" type="submit">Send</button>
+          <button className="btn btn--primary" type="submit"><Icon name="send" size={16} />Send</button>
         </form>
       )}
     </>
@@ -223,7 +224,7 @@ function AssistPanel() {
   return (
     <>
       <section className="panel panel--summary">
-        <h3>AI summary <span className="note">generated at handoff</span></h3>
+        <h3><Icon name="sparkle" size={16} />AI summary <span className="note">generated at handoff</span></h3>
         <p className="assist__intent">{a.summary.intent}</p>
         <ul className="assist__points">{a.summary.points.map((p) => <li key={p}>{p}</li>)}</ul>
         <p className="note">Sentiment: <strong>{a.summary.sentiment}</strong> · Handoff reason: {a.reason}</p>
@@ -252,7 +253,7 @@ function AssistPanel() {
           <div key={s.text} className="sugg">
             <p>{s.text}</p>
             <div className="sugg__foot">
-              <span>📄 {s.source} p.{s.page}</span>{s.internal && <span className="tag tag--violet">Internal</span>}
+              <span className="sugg__src"><Icon name="file" size={14} />{s.source} p.{s.page}</span>{s.internal && <span className="tag tag--teal">Internal</span>}
               <button type="button" className="btn btn--sm" onClick={() => use(s)}>{a.channel === 'chat' ? 'Insert' : 'Mark as said'}</button>
             </div>
           </div>
@@ -262,9 +263,9 @@ function AssistPanel() {
       <section className="panel">
         <h3>Actions</h3>
         <div className="actions">
-          <button type="button" className="btn btn--sm" disabled={a.ended} onClick={() => setForm(form === 'ticket' ? null : 'ticket')}>📝 Register grievance</button>
-          <button type="button" className="btn btn--sm" onClick={() => setForm(form === 'callback' ? null : 'callback')}>📞 Schedule callback</button>
-          <button type="button" className="btn btn--sm" disabled={a.ended} onClick={() => { dispatch({ type: 'line', who: 'system', text: 'SMS sent: link to the beneficiary status page' }); toast('SMS sent (demo).'); }}>💬 Send SMS with link</button>
+          <button type="button" className="btn btn--sm" disabled={a.ended} onClick={() => setForm(form === 'ticket' ? null : 'ticket')}><Icon name="clipboard" size={16} />Register grievance</button>
+          <button type="button" className="btn btn--sm" onClick={() => setForm(form === 'callback' ? null : 'callback')}><Icon name="calendar" size={16} />Schedule callback</button>
+          <button type="button" className="btn btn--sm" disabled={a.ended} onClick={() => { dispatch({ type: 'line', who: 'system', text: 'SMS sent: link to the beneficiary status page' }); toast('SMS sent (demo).'); }}><Icon name="mail" size={16} />Send SMS with link</button>
         </div>
         {form === 'ticket' && (
           <form className="mini" onSubmit={createTicket}>
