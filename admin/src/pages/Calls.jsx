@@ -10,15 +10,21 @@ const STAGES = [
   ['retrieval', 'Retrieval', 'var(--c-ret)'], ['tool', 'Tool', 'var(--c-tool)'], ['llm', 'LLM first token', 'var(--c-llm)'], ['tts', 'TTS first audio', 'var(--c-tts)'],
 ];
 
-// Sessions without a recorded transcript in the mock get a short generic one.
+// Sessions without a recorded transcript in the mock get a short generic one in their language.
+const GENERIC = {
+  English: ['en-IN', 'How much money do farmers get?', 'Eligible families get ₹6,000 a year in three instalments of ₹2,000.', 'Is e-KYC mandatory?', 'Yes, e-KYC is mandatory to keep receiving instalments.', 'PM-KISAN FAQs'],
+  Hindi: ['hi-IN', 'Kitna paisa milta hai?', 'Paatra parivaron ko saal mein ₹6,000 milte hain, ₹2,000 ki teen kiston mein.', 'e-KYC zaroori hai kya?', 'Haan, kiston ke liye e-KYC zaroori hai.', 'PM-KISAN FAQs (हिंदी)'],
+  Telugu: ['te-IN', 'రైతులకు ఎంత డబ్బు వస్తుంది?', 'అర్హులైన కుటుంబాలకు సంవత్సరానికి ₹6,000, ₹2,000 చొప్పున మూడు విడతల్లో వస్తుంది.', 'e-KYC తప్పనిసరా?', 'అవును, విడతలు అందుతూ ఉండాలంటే e-KYC తప్పనిసరి.', 'PM-KISAN FAQs (తెలుగు)'],
+  Malayalam: ['ml-IN', 'കർഷകർക്ക് എത്ര പണം ലഭിക്കും?', 'അർഹരായ കുടുംബങ്ങൾക്ക് വർഷം ₹6,000, ₹2,000 വീതം മൂന്ന് ഗഡുക്കളായി ലഭിക്കും.', 'e-KYC നിർബന്ധമാണോ?', 'അതെ, ഗഡുക്കൾ തുടർന്നും ലഭിക്കാൻ e-KYC നിർബന്ധമാണ്.', 'PM-KISAN FAQs (മലയാളം)'],
+};
 function genericTurns(s) {
-  const en = s.lang === 'English';
+  const [code, q1, a1, q2, a2, faq] = GENERIC[s.lang] || GENERIC.Hindi;
   return [
     { role: 'bot', text: 'Namaste! This is an automated assistant for PM-KISAN.', route: 'greeting' },
-    { role: 'user', text: en ? 'How much money do farmers get?' : 'Kitna paisa milta hai?' },
-    { role: 'bot', text: en ? 'Eligible families get ₹6,000 a year in three instalments of ₹2,000.' : 'Paatra parivaron ko saal mein ₹6,000 milte hain, ₹2,000 ki teen kiston mein.', route: 'cache', sources: [['PM-KISAN Operational Guidelines', 2]], latency: { eos: 240, stt: 130, cache: 17, total: 402 }, cacheScore: 0.96 },
-    { role: 'user', text: en ? 'Is e-KYC mandatory?' : 'e-KYC zaroori hai kya?' },
-    { role: 'bot', text: en ? 'Yes, e-KYC is mandatory to keep receiving instalments.' : 'Haan, kiston ke liye e-KYC zaroori hai.', route: 'llm', sources: [['PM-KISAN FAQs', 7]], model: 'claude-haiku-5-5', latency: { eos: 260, stt: 140, retrieval: 90, llm: 310, tts: 110, total: 910 } },
+    { role: 'user', text: q1, lang: code },
+    { role: 'bot', text: a1, route: 'cache', sources: [['PM-KISAN Operational Guidelines', 2]], latency: { eos: 240, stt: 130, cache: 17, total: 402 }, cacheScore: 0.96 },
+    { role: 'user', text: q2, lang: code },
+    { role: 'bot', text: a2, route: 'llm', sources: [[faq, 7]], model: 'claude-haiku-5-5', latency: { eos: 260, stt: 140, retrieval: 90, llm: 310, tts: 110, total: 910 } },
   ];
 }
 

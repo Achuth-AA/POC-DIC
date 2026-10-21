@@ -8,7 +8,7 @@ import { useStore } from '../store.jsx';
 const KINDS = ['llm', 'stt', 'tts'];
 
 export default function Providers() {
-  const { providers, setProviders, cache, setCache, changeLog, logChange } = useStore();
+  const { providers, setProviders, cache, setCache, clearCache, warmCache, kb, changeLog, logChange } = useStore();
   const toast = useToast();
   const [draft, setDraft] = useState(() => Object.fromEntries(KINDS.map((k) => [k, { active: providers[k].active, fallback: providers[k].fallback }])));
   const [pending, setPending] = useState(null);
@@ -97,6 +97,7 @@ export default function Providers() {
         <section className="card">
           <div className="card__head"><div><h2>Semantic cache</h2><p>Grounded, non-personal answers only. Key: helpline + language + KB version + prompt version + channel.</p></div></div>
           <div className="card__body" style={{ display: 'grid', gap: 16 }}>
+            <p className="note" style={{ margin: 0 }}>Now holding <strong>{cache.entries.toLocaleString('en-IN')}</strong> answers for KB v{cache.kbVersion}. Publishing a knowledge change clears it automatically.</p>
             <label className="switch">
               <input type="checkbox" checked={cache.enabled} onChange={(e) => {
                 setCache((c) => ({ ...c, enabled: e.target.checked }));
@@ -114,8 +115,8 @@ export default function Providers() {
               <p className="note" id="thHelp">Higher = fewer wrong cached answers but fewer hits. 0.92 kept false hits at 0.6% in eval run #15.</p>
             </div>
             <div className="toolbar">
-              <button type="button" className="btn" onClick={() => toast('Pre-warming: 127 FAQ questions and paraphrases queued (demo).')}>Pre-warm from FAQs</button>
-              <button type="button" className="btn btn--danger" onClick={() => toast('Cache cleared (demo).')}>Clear cache</button>
+              <button type="button" className="btn" onClick={() => toast(`Pre-warmed ${warmCache()} FAQ answers for KB v${kb.version}.`)}>Pre-warm from FAQs</button>
+              <button type="button" className="btn btn--danger" onClick={() => toast(`Cache cleared (${clearCache('Cleared from providers page').toLocaleString('en-IN')} entries).`)}>Clear cache</button>
             </div>
           </div>
         </section>

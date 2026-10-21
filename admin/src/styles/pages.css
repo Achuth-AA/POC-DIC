@@ -1,7 +1,7 @@
 /* Page-specific styles (moved from the per-page <style> blocks of the static version). */
 
 /* knowledge */
-.dropzone { border: 2px dashed #b9c4da; border-radius: var(--radius); padding: 22px; text-align: center; background: var(--surface-2); transition: background .15s, border-color .15s; }
+.dropzone { display: block; cursor: pointer; border: 2px dashed #b9c4da; border-radius: var(--radius); padding: 22px; text-align: center; background: var(--surface-2); transition: background .15s, border-color .15s; }
 .dropzone.is-over { background: var(--accent-soft); border-color: var(--accent); }
 .dropzone strong { display: block; font-size: 15px; margin-bottom: 4px; }
 .upload-opts { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 12px; font-size: 13px; }
@@ -64,3 +64,8 @@
 .pass { color: var(--ok); font-weight: 700; }
 .fail { color: var(--bad); font-weight: 700; }
   
+
+/* knowledge: version history */
+.versions { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
+.versions li { display: grid; gap: 1px; font-size: 12.5px; padding-left: 12px; border-left: 2px solid var(--accent); }
+.versions strong { font-size: 13px; }

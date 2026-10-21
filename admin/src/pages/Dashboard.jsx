@@ -90,7 +90,7 @@ export default function Dashboard() {
             <Ring value={c.hitRate} label="Cache hit rate" color="var(--c-cache)" target={0.4} />
             <dl className="kv" style={{ width: '100%' }}>
               <dt>Status</dt><dd>{c.enabled ? <Badge tone="ok">Enabled</Badge> : <Badge tone="muted">Disabled</Badge>}</dd>
-              <dt>Entries</dt><dd>{c.entries.toLocaleString('en-IN')}</dd>
+              <dt>Entries</dt><dd>{c.entries.toLocaleString('en-IN')} for KB v{c.kbVersion}</dd>
               <dt>Threshold</dt><dd>cosine ≥ {c.threshold}</dd>
               <dt>False hits</dt><dd>{pct(c.falseHitRate, 1)} (eval set)</dd>
               <dt>Median saving</dt><dd>≈ {ms(L.llmP50[23] - L.cacheP50[23])} per hit</dd>

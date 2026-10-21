@@ -14,7 +14,7 @@ const STOP = new Set('the a an is are to of for and or in on what which how do i
 const tokens = (s) => s.toLowerCase().match(/[\p{L}\p{N}₹]+/gu)?.filter((w) => !STOP.has(w) && w.length > 1) || [];
 
 export default function Knowledge() {
-  const { documents, setDocuments, chunks, setChunks, tables, kb, bumpKb } = useStore();
+  const { documents, setDocuments, chunks, setChunks, tables, kb, applyKbChange } = useStore();
   const toast = useToast();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
@@ -29,17 +29,21 @@ export default function Knowledge() {
 
   function setPublished(doc, publish) {
     updateDoc(doc.id, { status: publish ? 'published' : 'draft' });
-    bumpKb();
-    toast(publish
-      ? `Published "${doc.title}". KB is now v${kb.version + 1}; cached answers from older versions stop matching.`
-      : `"${doc.title}" is no longer searched by live calls.`);
+    const r = applyKbChange(`${publish ? 'Published' : 'Unpublished'} "${doc.title}"`);
+    toast(`${publish ? 'Published' : 'Unpublished'} "${doc.title}". KB v${r.from} → v${r.to}; ${r.cleared.toLocaleString('en-IN')} cached answers cleared.`);
   }
 
   function remove(doc) {
     setDocuments((docs) => docs.filter((d) => d.id !== doc.id));
-    bumpKb();
+    const r = applyKbChange(`Deleted "${doc.title}"`);
     setPreviewId(null);
-    toast('Deleted. Chunks, embeddings and cached answers are removed.');
+    toast(`Deleted. Chunks and embeddings removed; KB v${r.to}, ${r.cleared.toLocaleString('en-IN')} cached answers cleared.`);
+  }
+
+  function reindex(doc) {
+    updateDoc(doc.id, { updated: stamp() });
+    const r = applyKbChange(`Re-indexed "${doc.title}"`);
+    toast(`Re-indexed "${doc.title}". KB v${r.to}; cache cleared.`);
   }
 
   return (
@@ -97,6 +101,7 @@ export default function Knowledge() {
         </section>
 
         <div className="grid" style={{ alignContent: 'start' }}>
+          <VersionCard />
           <Upload setDocuments={setDocuments} setChunks={setChunks} updateDoc={updateDoc} />
           <RetrievalTest documents={documents} chunks={chunks} />
         </div>
@@ -106,10 +111,44 @@ export default function Knowledge() {
         subtitle={preview && <>{preview.file} · <Badge status={preview.status} /> <Badge status={preview.audience} /></>}>
         {preview && <Preview doc={preview} chunks={chunks[preview.id] || []} table={tables[preview.id]}
           onPublish={() => { setPublished(preview, true); setPreviewId(null); }}
-          onReindex={() => toast('Re-index queued (demo).')}
+          onReindex={() => { reindex(preview); setPreviewId(null); }}
           onDelete={() => remove(preview)} />}
       </Drawer>
     </>
+  );
+}
+
+// Current knowledge version, what the cache holds for it, and the version history.
+function VersionCard() {
+  const { kb, cache, clearCache, warmCache, changeLog } = useStore();
+  const toast = useToast();
+  const history = changeLog.filter((c) => c.kind === 'Knowledge').slice(0, 4);
+  return (
+    <section className="card">
+      <div className="card__head">
+        <div><h2>Version &amp; cache</h2><p>Publishing, unpublishing, deleting or re-indexing creates a new version and clears the cache.</p></div>
+        <span className="pill">KB v{kb.version}</span>
+      </div>
+      <div className="card__body" style={{ display: 'grid', gap: 12 }}>
+        <dl className="kv">
+          <dt>Live version</dt><dd>v{kb.version} · used by voice, chat and agent assist</dd>
+          <dt>Cached answers</dt>
+          <dd>{cache.entries.toLocaleString('en-IN')} for v{cache.kbVersion}{cache.entries === 0 && <> · <Badge tone="warn">empty, refills as people ask</Badge></>}</dd>
+          <dt>Last cleared</dt><dd>{cache.lastCleared || 'not since start of day'}</dd>
+        </dl>
+        <div className="toolbar">
+          <button type="button" className="btn btn--sm" onClick={() => toast(`Pre-warmed ${warmCache()} FAQ answers for KB v${kb.version}.`)}>Pre-warm from FAQs</button>
+          <button type="button" className="btn btn--sm btn--danger" onClick={() => toast(`Cache cleared (${clearCache('Cleared from knowledge base page').toLocaleString('en-IN')} entries).`)}>Clear cache now</button>
+        </div>
+        {history.length > 0 && (
+          <ol className="versions" aria-label="Version history">
+            {history.map((h) => (
+              <li key={`${h.at}-${h.to}`}><strong>{h.to}</strong><span>{h.note}</span><span className="note">{h.at} · {h.who}</span></li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </section>
   );
 }
 

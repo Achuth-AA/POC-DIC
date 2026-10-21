@@ -38,7 +38,7 @@ of scope for the POC and listed in [§17](#17-out-of-scope-for-the-poc).
 
 | # | The POC must show | Measured by | RFP ref | Marks at stake |
 |---|---|---|---|---|
-| G1 | Voice call answered by an AI agent in English and Hindi, plus 2 more Indian languages, including code-mixed speech | Live call in the demo | §6.7 | Presentation (20) |
+| G1 | Voice call answered by an AI agent in English and Hindi (mandatory) plus Telugu and Malayalam, including code-mixed speech | Live call in the demo | §6.7 | Presentation (20) |
 | G2 | Answers grounded in uploaded documents, **with the source shown** | Admin console shows doc + page per answer | §6.4, Ann. 2 #3 | 2 |
 | G3 | PDF/DOCX/TXT ingestion | Upload during demo | Ann. 2 #3 | 3 |
 | G4 | CSV/Excel/API structured data used in answers | Upload a CSV of scheme statuses, ask about it | Ann. 2 #3 | 3 |
@@ -76,7 +76,7 @@ Scripted demo (about 12 minutes):
 | 1 | Call the number. Bot: *"Namaste, this is an automated assistant for the Scheme Helpline…"* | Self-identification as AI (§6.7) |
 | 2 | Ask in English: "What documents do I need to apply?" Answer plays; admin console shows source `scheme_guidelines.pdf p.4` | RAG + citation |
 | 3 | Ask in Hindi / Hinglish: "Last date kab hai apply karne ki?" | Hindi, code-mixed |
-| 4 | Switch to Tamil or Bengali, ask the same thing | Two more languages |
+| 4 | Switch to Telugu, then Malayalam, and ask the same thing | Two more languages |
 | 5 | "Mera application status kya hai? ID 2026-1043". Bot asks for an OTP / date of birth, then reads status from the CSV | Structured data + caller authentication (§6.8) |
 | 6 | Upload `circular_2026_07.pdf` in the admin UI. Re-ask the deadline. New answer cites the circular | Update without redeploy |
 | 7 | In the admin UI, switch the LLM from provider A to provider B (and STT/TTS). Call again; trace shows the new provider | Model-agnostic |
@@ -777,15 +777,16 @@ requirement (§6.7).
 | English (Indian) | en-IN | yes | yes | yes | yes | Required |
 | Hindi | hi-IN | yes | yes | yes | yes | Required |
 | Hinglish (code-mixed) | hi-IN | yes | check | n/a (speaks Hindi/English) | n/a | Required (code-mixed) |
-| Tamil / Telugu / Bengali / Marathi (pick 2) | ta-IN, … | yes | check per provider | yes | check | Required (2 more) |
+| Telugu | te-IN | yes | Google Chirp yes; Deepgram: confirm | yes | Google TTS yes | Required (3rd language) |
+| Malayalam | ml-IN | yes | Google Chirp yes; Deepgram: confirm | yes | Google TTS yes | Required (4th language) |
 
 Confirm the exact language list each provider supports when you sign up; support changes often.
 
 **Language selection:**
-1. Greeting in English + Hindi: "For Hindi, press 1 or say Hindi…" (DTMF + voice).
+1. Greeting in English + Hindi with a keypad menu: "For English press 1, हिन्दी 2, తెలుగు 3, മലയാളം 4, or just speak" (DTMF + voice).
 2. Automatic detection after the first utterance (STT providers return a detected language; also run a fast
    script/language-ID check on the transcript).
-3. Caller can switch any time ("Tamil mein baat karo"), which emits `control: set_language`, and the worker
+3. Caller can switch any time ("Telugu mein baat karo", or by keypad), which emits `control: set_language`, and the worker
    swaps the STT/TTS language parameters.
 
 **Speech accuracy target (Annexure 13):** ≥85% for English/Hindi, ≥80% for others. Measure WER/CER with
@@ -955,7 +956,7 @@ Mirrors Annexure 13 so you can show DIC exactly the measurements they'll make.
 
 | File | Contents | Size for POC |
 |---|---|---|
-| `golden_qa.yaml` | Question, language, expected answer facts, expected source doc/page | 150 (EN 50, HI 50, other 2 langs 25 each), including paraphrases |
+| `golden_qa.yaml` | Question, language, expected answer facts, expected source doc/page | 150 (EN 40, HI 40, TE 35, ML 35), including paraphrases |
 | `unanswerable.yaml` | Questions not in the knowledge | 30 → must say "don't know" + offer human |
 | `escalation.yaml` | Conversations that must end in handoff (asks for human, 2 failures, distress) | 30 |
 | `redteam.yaml` | Prompt injection, jailbreak, others' data, poisoned document, tool abuse (bad args) | 40 |
@@ -1130,7 +1131,7 @@ About 3 weeks for 2 developers (one backend/voice, one frontend/eval). Start tel
 | 6 | Provider registry + `provider_config`; STT B, TTS B, LLM B | Providers screen |
 | 7 | Semantic cache + kb_version invalidation; publish workflow | Dashboard (cache hit rate) |
 | 8 | Timing marks + `turn_metrics` + OTel; tune VAD/endpointing | Latency charts (p50/p90 split) |
-| 9 | Hindi + 2 more languages; language detect/switch; text normaliser | Record audio test clips |
+| 9 | Hindi, Telugu and Malayalam; language detect/switch; text normaliser | Record audio test clips (EN, HI, TE, ML) |
 | 10 | Latency tuning pass (streaming TTS on sentence boundary, prompt caching, warm connections) | `latency_benchmark.py`, `cache_benchmark.py` |
 
 **Checkpoint:** switch providers live; median latency under 1 s on the LLM path; cache gain ≥40%.

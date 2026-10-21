@@ -2,8 +2,9 @@
 // (accessibility strip, tricolour rule, plain sections). No official emblems or logos.
 import { useEffect, useState } from 'react';
 
-function AskButton({ ask, assistant, className, children }) {
-  return <button type="button" className={className} onClick={() => assistant.open(ask ? { ask } : {})}>{children}</button>;
+function AskButton({ ask, call, assistant, className, children }) {
+  const opts = call ? { call: true } : ask ? { ask } : {};
+  return <button type="button" className={className} onClick={() => assistant.open(opts)}>{children}</button>;
 }
 
 export default function SchemePage({ assistant }) {
@@ -32,8 +33,10 @@ export default function SchemePage({ assistant }) {
             <button type="button" className="tool-btn" onClick={() => font(1)} aria-label="Increase text size">A+</button>
             <button type="button" className="tool-btn" aria-pressed={contrast} onClick={() => setContrast((c) => !c)}>High contrast</button>
             <span className="tool-sep" aria-hidden="true" />
-            {/* The page is English-only in the demo; this opens the assistant in Hindi. */}
+            {/* The page is English-only in the demo; these open the assistant in that language. */}
             <button type="button" className="tool-btn" lang="hi" onClick={() => assistant.open({ language: 'hi' })}>हिन्दी</button>
+            <button type="button" className="tool-btn" lang="te" onClick={() => assistant.open({ language: 'te' })}>తెలుగు</button>
+            <button type="button" className="tool-btn" lang="ml" onClick={() => assistant.open({ language: 'ml' })}>മലയാളം</button>
           </div>
         </div>
       </div>
@@ -64,9 +67,10 @@ export default function SchemePage({ assistant }) {
               <p className="eyebrow">Central Sector Scheme · Direct Benefit Transfer</p>
               <h1>Income support of ₹6,000 a year for landholding farmer families</h1>
               <p className="lead">Paid in three equal instalments of ₹2,000, directly into the bank accounts of eligible farmers.</p>
+              <p className="hero__langs">Ask by chat or voice call in English, हिन्दी, తెలుగు or മലയാളം. No phone needed.</p>
               <div className="hero__actions">
                 <AskButton assistant={assistant} ask="Am I eligible for PM-KISAN?" className="btn btn--primary">Check eligibility with the assistant</AskButton>
-                <a className="btn btn--ghost" href="#apply">How to apply</a>
+                <AskButton assistant={assistant} call className="btn btn--ghost">📞 Talk to the assistant</AskButton>
               </div>
             </div>
             <ul className="facts" aria-label="Key facts">
@@ -178,10 +182,14 @@ export default function SchemePage({ assistant }) {
           <div className="container help">
             <div>
               <h2>Need help?</h2>
-              <p>Ask our AI assistant in English, Hindi or your language, any time of day. It can explain the scheme,
-                check your status after OTP verification, register a grievance, or connect you to an officer.</p>
+              <p>Chat with our AI assistant or talk to it by voice, in English, Hindi, Telugu or Malayalam, any time of day.
+                It can explain the scheme, check your status after OTP verification, register a grievance, or connect you
+                to an officer. The voice call runs in your browser, so you don't need a phone.</p>
             </div>
-            <AskButton assistant={assistant} className="btn btn--primary">Open the assistant</AskButton>
+            <div className="help__actions">
+              <AskButton assistant={assistant} call className="btn btn--navy">📞 Call the assistant</AskButton>
+              <AskButton assistant={assistant} className="btn btn--primary">💬 Chat with the assistant</AskButton>
+            </div>
           </div>
         </section>
       </main>

@@ -3,7 +3,7 @@
 // visible focus. Targets WCAG 2.1 AA / GIGW 3.0.
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { ConfirmCard, OfflineHandoffCard, OtpCard, StatusCard } from './cards.jsx';
-import { backend } from './mockBackend.js';
+import { backend, LANGUAGES } from './mockBackend.js';
 import { STRINGS } from './strings.js';
 import './widget.css';
 
@@ -24,6 +24,8 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
   const [busy, setBusy] = useState(false);
   const [withAgent, setWithAgent] = useState(!!saved.current?.backend?.withAgent);
   const [call, setCall] = useState('off'); // off | connecting | live
+  const [callSec, setCallSec] = useState(0);
+  const [muted, setMuted] = useState(false);
   const [text, setText] = useState('');
   const sessionRef = useRef(saved.current?.sessionId || null);
   const langRef = useRef(lang);
@@ -98,11 +100,12 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
     const res = await backend.startSession({ tenant, channel: 'chat', language: langRef.current });
     sessionRef.current = res.sessionId;
     await addBot(res.greeting[langRef.current], { stream: false });
-    push({ kind: 'quick', options: res.quick });
+    push({ kind: 'quick', options: res.quick(langRef.current).options });
   }, [tenant, addBot, push]);
 
   const busyRef = useRef(false);
-  const ask = useCallback(async (raw) => {
+  // opts.quick: sent from a quick-reply button, so the answer stays in the chosen language.
+  const ask = useCallback(async (raw, opts = {}) => {
     const q = raw.trim();
     if (!q || busyRef.current) return;
     busyRef.current = true;
@@ -111,7 +114,7 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
     push({ kind: 'user', text: q });
     const typing = push({ kind: 'typing' });
     try {
-      const res = await backend.sendTurn(sessionRef.current, q, langRef.current);
+      const res = await backend.sendTurn(sessionRef.current, q, langRef.current, opts);
       removeMsg(typing);
       await renderBlocks(res.blocks, res.lang);
     } catch {
@@ -128,6 +131,7 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
     langRef.current = opts.language || langRef.current;
     setOpen(true);
     await ensureSession();
+    if (opts.call) { setCallSec(0); setMuted(false); setCall('connecting'); }
     if (opts.ask) ask(opts.ask);
   }, [ensureSession, ask]);
 
@@ -138,10 +142,17 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
 
   // Voice call screen (UI only until the LiveKit voice agent is connected).
   useEffect(() => {
-    if (call !== 'connecting') return undefined;
-    const tm = setTimeout(() => setCall('live'), 1500);
-    return () => clearTimeout(tm);
+    if (call === 'connecting') {
+      const tm = setTimeout(() => setCall('live'), 1500);
+      return () => clearTimeout(tm);
+    }
+    if (call === 'live') {
+      const iv = setInterval(() => setCallSec((n) => n + 1), 1000);
+      return () => clearInterval(iv);
+    }
+    return undefined;
   }, [call]);
+  const startCall = () => { setCallSec(0); setMuted(false); setCall('connecting'); };
 
   function submit(e) {
     e.preventDefault();
@@ -203,7 +214,7 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
         return (
           <div key={m.id} className="tnw-quick" role="group" aria-label="Suggested replies">
             {m.options.map((o) => (
-              <button key={o} type="button" className="tnw-chip" disabled={busy} onClick={() => { removeMsg(m.id); ask(o); }}>{o}</button>
+              <button key={o.send} type="button" className="tnw-chip" disabled={busy} onClick={() => { removeMsg(m.id); ask(o.send, { quick: true }); }}>{o.label}</button>
             ))}
           </div>
         );
@@ -226,10 +237,16 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
   return (
     <div className={`tnw ${withAgent ? 'tnw--agent' : ''}`} data-open={open} onKeyDown={(e) => { if (e.key === 'Escape' && open) closePanel(); }}>
       {!open && (
-        <button ref={launcherRef} type="button" className="tnw-launcher" aria-haspopup="dialog" aria-expanded="false" aria-controls="tnw-panel" aria-label={t.open} onClick={() => openPanel()}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><circle cx="9" cy="10.5" r="1.2" fill="currentColor" /><circle cx="12" cy="10.5" r="1.2" fill="currentColor" /><circle cx="15" cy="10.5" r="1.2" fill="currentColor" /></svg>
-          <span className="tnw-launcher__label">{t.launcher}</span>
-        </button>
+        <div className="tnw-launchers">
+          <button type="button" className="tnw-launcher tnw-launcher--call" aria-haspopup="dialog" aria-label={t.voice} onClick={() => openPanel({ call: true })}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-3 2a11 11 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>
+            <span className="tnw-launcher__label">{t.callLauncher}</span>
+          </button>
+          <button ref={launcherRef} type="button" className="tnw-launcher" aria-haspopup="dialog" aria-expanded="false" aria-controls="tnw-panel" aria-label={t.open} onClick={() => openPanel()}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><circle cx="9" cy="10.5" r="1.2" fill="currentColor" /><circle cx="12" cy="10.5" r="1.2" fill="currentColor" /><circle cx="15" cy="10.5" r="1.2" fill="currentColor" /></svg>
+            <span className="tnw-launcher__label">{t.launcher}</span>
+          </button>
+        </div>
       )}
       {open && (
         <section id="tnw-panel" className="tnw-panel" role="dialog" aria-modal="false" aria-labelledby="tnw-title" lang={lang}>
@@ -240,9 +257,13 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
               <p className="tnw-sub"><span className="tnw-dot" aria-hidden="true" /><span>{withAgent ? t.subAgent : t.sub}</span></p>
             </div>
             <div className="tnw-head__actions">
-              <button type="button" className="tnw-icon tnw-lang" aria-label="Switch language" lang={lang === 'en' ? 'hi' : 'en'}
-                onClick={() => setLang((l) => (l === 'en' ? 'hi' : 'en'))}>{lang === 'en' ? 'हिं' : 'EN'}</button>
-              <button type="button" className="tnw-icon tnw-voice" aria-label={t.voice} title={t.voice} onClick={() => setCall('connecting')}>
+              <label className="tnw-langpick">
+                <span className="tnw-sr">{t.language}</span>
+                <select value={lang} onChange={(e) => setLang(e.target.value)} aria-label={t.language}>
+                  {LANGUAGES.map((l) => <option key={l.code} value={l.code} lang={l.code}>{l.name}</option>)}
+                </select>
+              </label>
+              <button type="button" className="tnw-icon tnw-voice" aria-label={t.voice} title={t.voice} onClick={startCall}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
               </button>
               <button type="button" className="tnw-icon tnw-close" aria-label={t.close} onClick={closePanel}>
@@ -264,11 +285,24 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
           <p className="tnw-disclaimer">{t.disclaimer}</p>
 
           {call !== 'off' && (
-            <div className={`tnw-call ${call === 'live' ? 'is-live' : ''}`}>
+            <div className={`tnw-call ${call === 'live' ? 'is-live' : ''} ${muted ? 'is-muted' : ''}`} role="region" aria-label={t.voice}>
               <div className="tnw-call__pulse" aria-hidden="true"><span /><span /><span /></div>
-              <p className="tnw-call__status" role="status">{call === 'live' ? 'Connected · speak in English, Hindi or your language' : 'Connecting to the voice assistant…'}</p>
-              <p className="tnw-call__note">In the full build this opens a browser voice call to the same AI agent (LiveKit WebRTC). For now this shows the screen only.</p>
-              <button type="button" className="tnw-btn tnw-btn--danger tnw-call__end" autoFocus onClick={() => setCall('off')}>End call</button>
+              <p className="tnw-call__status" role="status">{call === 'live' ? t.callLive : t.callConnecting}</p>
+              {call === 'live' && <p className="tnw-call__timer" aria-label="Call time">{`${Math.floor(callSec / 60)}:${String(callSec % 60).padStart(2, '0')}`}</p>}
+              <label className="tnw-call__lang">
+                <span>{t.callIn}</span>
+                <select value={lang} onChange={(e) => setLang(e.target.value)}>
+                  {LANGUAGES.map((l) => <option key={l.code} value={l.code} lang={l.code}>{l.name}</option>)}
+                </select>
+              </label>
+              <div className="tnw-call__controls">
+                <button type="button" className="tnw-btn tnw-call__mute" aria-pressed={muted} disabled={call !== 'live'} onClick={() => setMuted((v) => !v)}>
+                  {muted ? `🔇 ${t.unmute}` : `🎙️ ${t.mute}`}
+                </button>
+                <button type="button" className="tnw-btn tnw-btn--danger tnw-call__end" autoFocus onClick={() => setCall('off')}>{t.endCall}</button>
+              </div>
+              <p className="tnw-call__note">{t.callNote}</p>
+              <button type="button" className="tnw-link tnw-call__back" onClick={() => setCall('off')}>{t.backToChat}</button>
             </div>
           )}
         </section>

@@ -69,11 +69,20 @@ Notes:
 
 ### Demo tips
 
-- **Widget:** try "Am I eligible?", "kist kab aati hai?" (Hindi reply), "Check my status" (registration
-  `UP123456789`, any 10-digit mobile, OTP `123456`), "Register a complaint", "Talk to an officer".
+- **Languages:** English and Hindi (mandatory), plus Telugu and Malayalam. Pick one in the widget header, use the
+  हिन्दी / తెలుగు / മലയാളം links in the top strip, or just type in that script; the reply comes back in the same
+  language, and the quick-reply buttons are translated too.
+- **Widget:** try "Am I eligible?", "kist kab aati hai?" (Hindi reply), "నాకు ఎంత డబ్బు వస్తుంది?" (Telugu),
+  "എനിക്ക് അർഹതയുണ്ടോ?" (Malayalam), "Check my status" (registration `UP123456789`, `TS456123789` or
+  `KL321654987`, any 10-digit mobile, OTP `123456`), "Register a complaint", "Talk to an officer".
   Add `?agents=offline` to the URL to see the callback / email flow instead of a live officer.
-- **Admin → Knowledge base:** upload any PDF/DOCX/CSV to watch ingestion, publish the draft circular
-  (KB version goes up), click a document to preview its chunks, and use *Test a question*.
+- **Voice call from the page:** "📞 Talk to the assistant" in the hero, "Call the assistant" in Help, or the
+  **Call** button next to the chat button. The call screen has a language picker, timer, mute and end call. It is
+  the screen only for now; the browser voice call connects once the LiveKit voice agent is built.
+- **Admin → Knowledge base:** upload any PDF/DOCX/CSV to watch ingestion, publish the draft circular, click a
+  document to preview its chunks, and use *Test a question*. Every publish, unpublish, delete or re-index creates
+  a new knowledge version (v7 → v8) and clears the cached answers of the old version; the *Version & cache* card
+  shows the live version, what the cache holds, the history, and buttons to pre-warm or clear the cache.
 - **Admin → Providers:** switch LLM/STT/TTS, apply, and see the change log; the dashboard follows.
 - **Agent console:** answer the voice call. New caller lines arrive live and the suggestions update.
   End the call and complete the wrap-up. A callback booked during a call shows on the Callbacks page.
