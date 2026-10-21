@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body data-page="dashboard">
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content" id="main">
+        <div class="page-head">
+          <div>
+            <h1>Dashboard</h1>
+            <p>Today, live. Latency is measured from the end of caller speech to the first audio byte of the reply.</p>
+          </div>
+          <div class="page-head__actions">
+            <div class="seg" role="group" aria-label="Time range">
+              <button type="button" aria-pressed="true">24 h</button>
+              <button type="button" aria-pressed="false">7 days</button>
+              <button type="button" aria-pressed="false">30 days</button>
+            </div>
+            <a class="btn" href="#" id="exportBtn">Export metrics (JSON)</a>
+          </div>
+        </div>
+
+        <section class="grid grid--kpi" id="kpis" aria-label="Key numbers"></section>
+
+        <div class="grid grid--3-1">
+          <section class="card">
+            <div class="card__head">
+              <div><h2>Response latency</h2><p>p50 and p90 per hour, split by cache/rules turns and LLM turns</p></div>
+              <div class="legend">
+                <span><i style="background:var(--c-llm)"></i>LLM p50</span>
+                <span style="color:var(--c-llm-2)"><i class="dashed"></i>LLM p90</span>
+                <span><i style="background:var(--c-cache)"></i>Cache p50</span>
+                <span style="color:var(--c-cache-2)"><i class="dashed"></i>Cache p90</span>
+              </div>
+            </div>
+            <div class="card__body"><div id="latencyChart"></div></div>
+          </section>
+          <section class="card">
+            <div class="card__head"><div><h2>Semantic cache</h2><p>Target: at least 40% gain</p></div></div>
+            <div class="card__body" style="display:grid;justify-items:center;gap:12px">
+              <div id="cacheRing"></div>
+              <dl class="kv" id="cacheStats" style="width:100%"></dl>
+            </div>
+          </section>
+        </div>
+
+        <div class="grid grid--2">
+          <section class="card">
+            <div class="card__head"><div><h2>Latency budget (LLM path, median)</h2><p>Where the time goes in one turn; tick = budget</p></div></div>
+            <div class="card__body"><div class="budget" id="budget"></div></div>
+          </section>
+          <section class="card">
+            <div class="card__head"><div><h2>How turns were answered</h2><p>Share of all turns today</p></div></div>
+            <div class="card__body" id="routes"></div>
+          </section>
+        </div>
+
+        <div class="grid grid--3-1">
+          <section class="card">
+            <div class="card__head">
+              <div><h2>Recent calls and chats</h2><p>Click a row to open the full audit trail</p></div>
+              <a class="btn btn--sm" href="calls.html">View all</a>
+            </div>
+            <div class="card__body card__body--flush table-wrap"><table class="data" id="sessions"></table></div>
+          </section>
+          <div class="grid" style="align-content:start">
+            <section class="card">
+              <div class="card__head"><div><h2>Active providers</h2></div><a class="btn btn--sm" href="providers.html">Change</a></div>
+              <div class="card__body"><dl class="kv" id="providerList"></dl></div>
+            </section>
+            <section class="card">
+              <div class="card__head"><div><h2>Languages</h2></div></div>
+              <div class="card__body" id="languages"></div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script src="js/mock-data.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

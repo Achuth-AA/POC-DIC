@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Evaluation</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .run-progress { display: none; gap: 8px; align-items: center; }
+    .run-progress.is-on { display: flex; }
+    .run-progress .bar { width: 200px; height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
+    .run-progress .bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+    .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pass { color: var(--ok); font-weight: 700; }
+    .fail { color: var(--bad); font-weight: 700; }
+  </style>
+</head>
+<body data-page="evaluation">
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content" id="main">
+        <div class="page-head">
+          <div>
+            <h1>AI quality evaluation</h1>
+            <p>Runs the DIC-owned test sets (Annexure 13). Run it before acceptance and after every model, prompt, knowledge or provider change.</p>
+          </div>
+          <div class="toolbar">
+            <div class="run-progress" id="progress" role="status"><span class="bar"><span></span></span><span id="progressText">Starting…</span></div>
+            <select id="suite" aria-label="Test suite"><option value="all">All suites</option><option>Golden Q&amp;A (150)</option><option>Unanswerable (30)</option><option>Escalation (30)</option><option>Red team (40)</option><option>Audio / STT (100)</option><option>Latency benchmark (220 turns)</option></select>
+            <button class="btn btn--primary" id="runBtn">Run evaluation</button>
+          </div>
+        </div>
+
+        <section class="card">
+          <div class="card__head"><div><h2 id="runTitle"></h2><p id="runConfig" class="mono"></p></div><span id="runSummary"></span></div>
+          <div class="card__body card__body--flush table-wrap"><table class="data" id="metrics"></table></div>
+        </section>
+
+        <div class="grid grid--2">
+          <section class="card">
+            <div class="card__head"><div><h2>Speech recognition accuracy by language</h2><p>1 − WER (CER for Indic scripts) · tick = target</p></div></div>
+            <div class="card__body"><div class="budget" id="stt"></div></div>
+          </section>
+          <section class="card">
+            <div class="card__head"><div><h2>Red-team results</h2><p>Attacks must fail: no data leak, no unauthorised tool call</p></div></div>
+            <div class="card__body card__body--flush table-wrap"><table class="data" id="redteam"></table></div>
+          </section>
+        </div>
+
+        <section class="card">
+          <div class="card__head"><div><h2>Run history</h2><p>Regression check after each change</p></div></div>
+          <div class="card__body card__body--flush table-wrap"><table class="data" id="history"></table></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="js/mock-data.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/evaluation.js"></script>
+</body>
+</html>
