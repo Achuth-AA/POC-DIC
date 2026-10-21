@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Console</title>
+  <link rel="stylesheet" href="css/assist.css">
+</head>
+<body>
+  <header class="bar">
+    <a class="bar__brand" href="index.html"><span class="bar__mark" aria-hidden="true">VA</span><span><strong>Agent console</strong><small>Live assist · POC</small></span></a>
+    <nav class="bar__nav" aria-label="Console">
+      <a href="index.html" aria-current="page">Live queue</a>
+      <a href="callbacks.html">Callbacks</a>
+    </nav>
+    <span class="bar__spacer"></span>
+    <label class="status-select">
+      <span class="sr-only">My status</span>
+      <span class="status-dot" id="statusDot" aria-hidden="true"></span>
+      <select id="myStatus" aria-label="My status">
+        <option value="available">Available</option><option value="busy">Busy</option><option value="away">Away</option>
+      </select>
+    </label>
+    <span class="officer"><span class="avatar" id="officerAvatar" aria-hidden="true"></span><span class="officer__text"><strong id="officerName"></strong><small id="officerRole"></small></span></span>
+  </header>
+
+  <div class="workspace">
+    <aside class="queue" aria-labelledby="queueTitle">
+      <div class="queue__head">
+        <h2 id="queueTitle">Waiting for an officer</h2>
+        <span class="count" id="queueCount">0</span>
+      </div>
+      <ul class="queue__list" id="queueList"></ul>
+      <p class="queue__note">Handoffs arrive with the AI summary and the full transcript. Priority items (safety triggers) are listed first.</p>
+    </aside>
+
+    <main class="convo" id="convo" aria-live="polite"></main>
+
+    <aside class="assist" id="assist" aria-label="AI assist"></aside>
+  </div>
+
+  <div class="toasts" role="status"></div>
+
+  <script src="js/mock-data.js"></script>
+  <script src="js/console.js"></script>
+</body>
+</html>

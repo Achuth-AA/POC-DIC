@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Providers and Cache</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .prov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .opt { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; padding: 12px; border: 1.5px solid var(--line); border-radius: 10px; cursor: pointer; }
+    .opt:hover { background: var(--surface-2); }
+    .opt input { margin-top: 3px; }
+    .opt.is-active { border-color: var(--accent); background: var(--accent-soft); }
+    .opt__name { font-weight: 700; }
+    .opt__meta { font-size: 12px; color: var(--muted); }
+    .opt__lat { font-size: 12px; font-weight: 600; text-align: right; white-space: nowrap; }
+    .opts { display: grid; gap: 8px; }
+    .prov-foot { display: grid; gap: 10px; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); }
+    .changed { color: var(--warn); font-weight: 600; font-size: 12.5px; }
+    .range { display: flex; align-items: center; gap: 10px; }
+    .range input { flex: 1; }
+    @media (max-width: 1200px) { .prov-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="providers">
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content" id="main">
+        <div class="page-head">
+          <div>
+            <h1>Providers &amp; cache</h1>
+            <p>Switch the LLM, speech-to-text or text-to-speech provider by configuration. New calls use the change at once; live calls keep their provider.</p>
+          </div>
+        </div>
+
+        <div class="prov-grid" id="providers"></div>
+
+        <div class="grid grid--2">
+          <section class="card">
+            <div class="card__head"><div><h2>Semantic cache</h2><p>Grounded, non-personal answers only. Key: helpline + language + KB version + prompt version + channel.</p></div></div>
+            <div class="card__body" style="display:grid;gap:16px">
+              <label class="switch"><input type="checkbox" id="cacheOn" checked><span class="switch__ui"></span><span>Cache enabled</span></label>
+              <div class="field">
+                <span>Similarity threshold</span>
+                <div class="range"><input type="range" id="threshold" min="0.80" max="0.99" step="0.01" value="0.92" aria-describedby="thHelp"><strong id="thVal" class="mono">0.92</strong></div>
+                <p class="note" id="thHelp">Higher = fewer wrong cached answers but fewer hits. 0.92 kept false hits at 0.6% in eval run #15.</p>
+              </div>
+              <div class="toolbar">
+                <button class="btn" id="warmCache">Pre-warm from FAQs</button>
+                <button class="btn btn--danger" id="clearCache">Clear cache</button>
+              </div>
+            </div>
+          </section>
+          <section class="card">
+            <div class="card__head"><div><h2>Automatic failover</h2><p>RFP: switch to the backup provider within 15 minutes</p></div></div>
+            <div class="card__body" style="display:grid;gap:12px">
+              <label class="switch"><input type="checkbox" checked><span class="switch__ui"></span><span>Fail over automatically after 3 failed health checks</span></label>
+              <dl class="kv">
+                <dt>Health check</dt><dd>every 20 s per provider</dd>
+                <dt>LLM per request</dt><dd>LiteLLM falls back on error or after 8 s</dd>
+                <dt>STT / TTS mid-call</dt><dd>worker rebuilds the plugin with the backup and says "one moment"</dd>
+                <dt>Last drill</dt><dd>2026-10-19 · LLM failover in 6 min · passed</dd>
+              </dl>
+              <button class="btn" id="drill" style="justify-self:start">Run failover drill</button>
+            </div>
+          </section>
+        </div>
+
+        <section class="card">
+          <div class="card__head"><div><h2>Change log</h2><p>Every configuration change is recorded (model governance, Annexure 14)</p></div></div>
+          <div class="card__body card__body--flush table-wrap"><table class="data" id="log"></table></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="confirm" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="scrim is-open"></div>
+    <div class="modal__box" style="position:relative">
+      <header><h2 id="confirmTitle" style="font-size:16px">Apply provider change?</h2></header>
+      <div class="modal__body" id="confirmBody"></div>
+      <footer><button class="btn" id="confirmNo">Cancel</button><button class="btn btn--primary" id="confirmYes">Apply now</button></footer>
+    </div>
+  </div>
+
+  <script src="js/mock-data.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/providers.js"></script>
+</body>
+</html>
