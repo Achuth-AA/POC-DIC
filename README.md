@@ -22,6 +22,29 @@ python3 -m http.server 8000
 Then open <http://localhost:8000/> for a launcher page with links to all three. Opening the HTML files directly
 (`file://`) also works.
 
+### Deploy to Vercel (three separate projects)
+
+Each folder is a self-contained static site with its own `vercel.json`, so it deploys with no build step.
+Do this three times, once per folder:
+
+1. In Vercel: **Add New → Project** and import this GitHub repository.
+2. **Root Directory**: `end-user`, `admin` or `human-assist`.
+3. **Framework Preset**: *Other*. Leave the Build Command empty and the Output Directory as default.
+4. Deploy.
+
+Then link the admin console to the other two: put their URLs in [`admin/js/config.js`](admin/js/config.js)
+(`agentConsoleUrl`, `citizenDemoUrl`) and push. Until you do, the admin sidebar just hides those two links.
+
+Notes:
+- Every response carries `X-Robots-Tag: noindex`, so search engines won't index the demo, in particular the
+  citizen page, which looks like a Government site.
+- There is no login yet. Anyone with an admin or agent console URL can open it. The data is all fake, but if you
+  want the links private, turn on Vercel's Deployment Protection for those projects (check what your plan
+  includes).
+- Choose neutral project names (e.g. `voice-poc-citizen`), not names that look like an official domain.
+- The repo-root `index.html` launcher is only for local use. Deploy it as a fourth project with Root Directory `.`
+  if you want it, but its links assume the three apps sit under one site.
+
 ### Demo tips
 
 - **Widget:** try "Am I eligible?", "kist kab aati hai?" (Hindi reply), "Check my status" (registration

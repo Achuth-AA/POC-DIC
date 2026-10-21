@@ -34,6 +34,15 @@ window.UI = (function () {
     setTimeout(() => t.remove(), 3200);
   }
 
+  // Link to a sibling app: the configured URL if set (separate deployments), otherwise the
+  // relative path when the whole repo is served as one site, otherwise no link.
+  function appLink(key, relative, label) {
+    const cfg = window.APP_CONFIG || {};
+    const servedTogether = /\/admin\//.test(location.pathname);
+    const href = cfg[key] || (servedTogether ? relative : '');
+    return href ? `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(label)} ↗</a>` : '';
+  }
+
   function renderShell() {
     const page = document.body.dataset.page;
     const side = document.getElementById('sidebar');
@@ -49,10 +58,7 @@ window.UI = (function () {
             <span>${n.label}</span></a></li>`).join('')}
         </ul>
       </nav>
-      <div class="side-foot">
-        <a href="../human-assist/index.html">Open agent console ↗</a>
-        <a href="../end-user/index.html">Open citizen demo ↗</a>
-      </div>`;
+      <div class="side-foot">${appLink('agentConsoleUrl', '../human-assist/index.html', 'Open agent console')}${appLink('citizenDemoUrl', '../end-user/index.html', 'Open citizen demo')}</div>`;
 
     const top = document.getElementById('topbar');
     top.innerHTML = `
