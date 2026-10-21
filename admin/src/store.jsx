@@ -12,6 +12,7 @@ export function StoreProvider({ children }) {
   const [documents, setDocuments] = useState(seed.documents);
   const [chunks, setChunks] = useState(seed.chunks);
   const [providers, setProviders] = useState(seed.providers);
+  const [settings, setSettings] = useState(seed.settings);
   const [cache, setCache] = useState(seed.cache);
   const [changeLog, setChangeLog] = useState(seed.changeLog);
   const [evalReport, setEvalReport] = useState(seed.evalReport);
@@ -48,9 +49,9 @@ export function StoreProvider({ children }) {
   const value = useMemo(() => ({
     ...seed, kb: { ...seed.kb, version: kbVersion },
     documents, setDocuments, chunks, setChunks, applyKbChange,
-    providers, setProviders, cache, setCache, clearCache, warmCache, changeLog, logChange,
+    providers, setProviders, settings, setSettings, cache, setCache, clearCache, warmCache, changeLog, logChange,
     evalReport, setEvalReport,
-  }), [seed, kbVersion, documents, chunks, applyKbChange, providers, cache, clearCache, warmCache, changeLog, logChange, evalReport]);
+  }), [seed, kbVersion, documents, chunks, applyKbChange, providers, settings, cache, clearCache, warmCache, changeLog, logChange, evalReport]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

@@ -9,7 +9,7 @@ export function createMock() {
     { id: 'd3', title: 'PM-KISAN FAQs (हिंदी)', file: 'pmkisan_faq_hi.docx', type: 'DOCX', audience: 'public', version: 2, status: 'published', pages: 20, chunks: 66, size: '355 KB', updated: '2026-10-19 11:12', by: 'admin@dic' },
     { id: 'd8', title: 'PM-KISAN FAQs (తెలుగు)', file: 'pmkisan_faq_te.docx', type: 'DOCX', audience: 'public', version: 1, status: 'published', pages: 21, chunks: 68, size: '372 KB', updated: '2026-10-20 15:30', by: 'admin@dic' },
     { id: 'd9', title: 'PM-KISAN FAQs (മലയാളം)', file: 'pmkisan_faq_ml.docx', type: 'DOCX', audience: 'public', version: 1, status: 'published', pages: 22, chunks: 70, size: '388 KB', updated: '2026-10-20 15:42', by: 'admin@dic' },
-    { id: 'd4', title: 'Circular: e-KYC camp schedule, Oct 2026', file: 'circular_ekyc_oct2026.pdf', type: 'PDF', audience: 'public', version: 1, status: 'draft', pages: 3, chunks: 6, size: '180 KB', updated: '2026-10-21 09:40', by: 'admin@dic', priority: 'high' },
+    { id: 'd4', title: 'Circular: e-KYC camp schedule, Oct 2026', file: 'circular_ekyc_oct2026.pdf', type: 'PDF', audience: 'public', version: 1, status: 'published', pages: 3, chunks: 6, size: '180 KB', updated: '2026-10-21 09:40', by: 'admin@dic', priority: 'high' },
     { id: 'd5', title: 'Officer SOP: bank detail correction', file: 'sop_bank_correction.pdf', type: 'PDF', audience: 'internal', version: 1, status: 'published', pages: 6, chunks: 12, size: '420 KB', updated: '2026-10-15 14:00', by: 'admin@dic' },
     { id: 'd6', title: 'Beneficiary status (sample)', file: 'beneficiary_status.csv', type: 'CSV', audience: 'tool', version: 4, status: 'published', rows: 2400, chunks: 0, size: '196 KB', updated: '2026-10-20 18:30', by: 'admin@dic', lookup: 'registration_no', tool: 'get_beneficiary_status', minAuth: 1 },
     { id: 'd7', title: 'Grievance categories', file: 'grievance_categories.xlsx', type: 'XLSX', audience: 'tool', version: 1, status: 'published', rows: 14, chunks: 0, size: '22 KB', updated: '2026-10-12 10:10', by: 'admin@dic', lookup: 'category', tool: 'list_grievance_categories', minAuth: 0 },
@@ -84,12 +84,15 @@ export function createMock() {
     tts: {
       label: 'Text to speech (TTS)', active: 'sarvam-bulbul', fallback: 'google-tts',
       options: [
-        { id: 'sarvam-bulbul', name: 'Sarvam Bulbul', vendor: 'Sarvam AI', region: 'India', version: 'bulbul:v2', p50: 110, health: 'ok', use: 'Indian voices · EN · HI · TE · ML' },
-        { id: 'google-tts', name: 'Google Cloud TTS', vendor: 'Google Cloud', region: 'asia-south1 (Mumbai)', version: 'neural2', p50: 150, health: 'ok', use: 'Backup voice · EN · HI · TE · ML' },
-        { id: 'cartesia', name: 'Cartesia Sonic', vendor: 'Cartesia', region: 'Confirm region', version: 'sonic-2', p50: 90, health: 'ok', use: 'Lowest first-byte latency (confirm TE · ML)' },
+        { id: 'sarvam-bulbul', name: 'Sarvam Bulbul', vendor: 'Sarvam AI', region: 'India', version: 'bulbul:v2', p50: 110, health: 'ok', use: 'Indian voices · EN · HI · TE · ML', voices: ['Anushka · female', 'Abhilash · male', 'Vidya · female'] },
+        { id: 'google-tts', name: 'Google Cloud TTS', vendor: 'Google Cloud', region: 'asia-south1 (Mumbai)', version: 'neural2', p50: 150, health: 'ok', use: 'Backup voice · EN · HI · TE · ML', voices: ['Neural2-A · female', 'Neural2-B · male'] },
+        { id: 'cartesia', name: 'Cartesia Sonic', vendor: 'Cartesia', region: 'Confirm region', version: 'sonic-2', p50: 90, health: 'ok', use: 'Lowest first-byte latency (confirm TE · ML)', voices: ['Indian English · female', 'Hindi · male'] },
       ],
     },
   };
+
+  // Answer generation settings shown in the Models page "Run settings" panel.
+  const settings = { voice: 'Anushka · female', defaultLang: 'auto', temperature: 0.2, maxTokens: 150, topK: 4, autoFailover: true };
 
   // Cached answers are keyed by KB version, so publishing a change makes every older entry unusable.
   const cache = { enabled: true, threshold: 0.92, entries: 1284, kbVersion: 7, hitRate: 0.47, falseHitRate: 0.006, lastCleared: null };
@@ -205,5 +208,5 @@ export function createMock() {
     ],
   };
 
-  return { kb, documents, chunks, tables, providers, cache, changeLog, latency, stageBudget, kpis, routes, languages, sessions, turns, evalReport };
+  return { settings, kb, documents, chunks, tables, providers, cache, changeLog, latency, stageBudget, kpis, routes, languages, sessions, turns, evalReport };
 }

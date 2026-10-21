@@ -151,7 +151,7 @@ export default function Dashboard() {
         </section>
         <div className="grid" style={{ alignContent: 'start' }}>
           <section className="card">
-            <div className="card__head"><div><h2>Active providers</h2></div><button type="button" className="btn btn--sm" onClick={() => navigate('/providers')}>Change</button></div>
+            <div className="card__head"><div><h2>Active providers</h2></div><button type="button" className="btn btn--sm" onClick={() => navigate('/models')}>Change</button></div>
             <div className="card__body">
               <dl className="kv">
                 {['llm', 'stt', 'tts'].map((kind) => (
