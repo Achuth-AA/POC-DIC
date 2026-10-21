@@ -1,7 +1,7 @@
 // Mock data for the human-assist (agent) console. In the real build the queue and live transcript arrive
 // over SSE from GET /v1/sessions/live, and suggestions come from the same knowledge base the bot uses
 // (public + internal documents, lower relevance threshold, raw snippets, no LLM).
-window.ASSIST = (function () {
+export function createMock() {
   const officer = { name: 'Sunita Sharma', short: 'SS', role: 'Helpline officer · demo' };
 
   const queue = [
@@ -89,4 +89,4 @@ window.ASSIST = (function () {
   ];
 
   return { officer, queue, knowledge, dispositions, callbacks };
-})();
+}
