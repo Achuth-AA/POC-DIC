@@ -4,6 +4,7 @@ import Badge from '../components/Badge.jsx';
 import { Stack } from '../components/charts.jsx';
 import { downloadJson } from '../lib/format.js';
 import { useStore } from '../store.jsx';
+import Icon from '../components/Icon.jsx';
 
 const STAGES = [
   ['eos', 'End of speech', 'var(--c-eos)'], ['stt', 'STT', 'var(--c-stt)'], ['cache', 'Cache', 'var(--c-cache)'],
@@ -48,7 +49,7 @@ export default function Calls() {
           <p>Every turn with its route, sources, model version and latency breakdown. This is the audit trail.</p>
         </div>
         <div className="seg" role="group" aria-label="Channel">
-          {[['', 'All'], ['voice', '📞 Voice'], ['chat', '💬 Chat']].map(([v, label]) => (
+          {[['', 'All'], ['voice', 'Voice'], ['chat', 'Chat']].map(([v, label]) => (
             <button key={v} type="button" aria-pressed={channel === v} onClick={() => setChannel(v)}>{label}</button>
           ))}
         </div>
@@ -64,7 +65,7 @@ export default function Calls() {
                 {rows.map((x) => (
                   <tr key={x.id} className={`is-clickable ${x.id === s.id ? 'is-selected' : ''}`} tabIndex={0} aria-current={x.id === s.id || undefined}
                     onClick={() => choose(x.id)} onKeyDown={(e) => e.key === 'Enter' && choose(x.id)}>
-                    <td><div className="cell-title">{x.channel === 'voice' ? '📞' : '💬'} <span className="mono">{x.id}</span></div><div className="cell-sub">{x.started} · {x.duration} · {x.turns} turns</div></td>
+                    <td><div className="cell-title"><Icon name={x.channel === 'voice' ? 'phone' : 'chat'} size={16} title={x.channel === 'voice' ? 'Voice' : 'Chat'} /><span className="mono">{x.id}</span></div><div className="cell-sub">{x.started} · {x.duration} · {x.turns} turns</div></td>
                     <td>{x.lang}</td><td className="num">{x.p50} ms</td><td><Badge status={x.outcome} /></td>
                   </tr>
                 ))}
@@ -76,7 +77,7 @@ export default function Calls() {
         <section className="card" aria-live="polite">
           <div className="card__head">
             <div>
-              <h2>{s.channel === 'voice' ? '📞 Voice call' : '💬 Web chat'} <span className="mono">{s.id}</span> <Badge status={s.outcome} /></h2>
+              <h2>{s.channel === 'voice' ? 'Voice call' : 'Web chat'} <span className="mono">{s.id}</span> <Badge status={s.outcome} /></h2>
               <p>{s.caller} · {s.lang} · started {s.started} · {s.duration}</p>
             </div>
             <button type="button" className="btn btn--sm" onClick={() => downloadJson(`${s.id}.json`, { session: s, turns })}>Download JSON</button>
@@ -119,8 +120,8 @@ function Turn({ t, channel }) {
         ) : t.lang && (
           <div className="turn__meta"><span className="mono">{t.lang}</span><span>PII masked before logging</span></div>
         )}
-        {t.sources && <div className="turn__src">📄 {t.sources.map(([title, page]) => `${title} p.${page}`).join(' · ')}</div>}
-        {t.tool && <div className="turn__tool">🔧 <span className="mono">{t.tool.name}({t.tool.args})</span> → {t.tool.status} · {t.tool.ms} ms</div>}
+        {t.sources && <div className="turn__src"><Icon name="file" size={14} />{t.sources.map(([title, page]) => `${title} p.${page}`).join(' · ')}</div>}
+        {t.tool && <div className="turn__tool"><Icon name="tool" size={14} /><span className="mono">{t.tool.name}({t.tool.args})</span> → {t.tool.status} · {t.tool.ms} ms</div>}
         {t.note && <div className="turn__note">{t.note}</div>}
       </div>
     </div>

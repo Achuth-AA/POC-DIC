@@ -1,6 +1,7 @@
 // Interactive cards inside the chat: OTP verification, status, confirmation, handoff options.
 import { useEffect, useRef, useState } from 'react';
 import { backend } from './mockBackend.js';
+import Icon from '../components/Icon.jsx';
 
 export function StatusCard({ record: r }) {
   const rows = [['Registration no.', r.regNo], ['Name', r.name], ['State', r.state], ['Land records', r.land], ['e-KYC', r.ekyc], ['Latest instalment', r.last], ['Next instalment', r.next]];
@@ -87,8 +88,8 @@ export function ConfirmCard({ t, block, sessionId, onResult }) {
       <h3 className="tnw-card__title">{block.title}</h3>
       <table className="tnw-table"><tbody>{block.rows.map(([k, v]) => <tr key={k}><th scope="row">{k}</th><td>{v}</td></tr>)}</tbody></table>
       <div className="tnw-actions">
-        {[['submit', `✓ ${t.submit}`, 'tnw-btn--primary'], ['edit', `✎ ${t.edit}`, ''], ['cancel', `✕ ${t.cancel}`, '']].map(([a, label, cls]) => (
-          <button key={a} type="button" className={`tnw-btn ${cls} ${chosen === a ? 'is-chosen' : ''}`} disabled={!!chosen} onClick={() => choose(a)}>{label}</button>
+        {[['submit', t.submit, 'tnw-btn--primary', 'check'], ['edit', t.edit, '', 'edit'], ['cancel', t.cancel, '', 'x']].map(([a, label, cls, icon]) => (
+          <button key={a} type="button" className={`tnw-btn ${cls} ${chosen === a ? 'is-chosen' : ''}`} disabled={!!chosen} onClick={() => choose(a)}><Icon name={icon} size={16} />{label}</button>
         ))}
       </div>
       <p className="tnw-card__foot">Nothing is submitted until you press Submit.</p>
@@ -109,20 +110,20 @@ export function OfflineHandoffCard({ t, text, sessionId, onDone }) {
 
   async function book() {
     const res = await backend.scheduleCallback(sessionId, slot);
-    onDone(`📞 Callback booked for tomorrow, ${slot}. Reference ${res.ref}. The officer will see this conversation.`);
+    onDone(`Callback booked for tomorrow, ${slot}. Reference ${res.ref}. The officer will see this conversation.`);
   }
 
   function sendMail() {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return;
-    onDone(`✉️ An officer will reply to ${email.trim()} by the next working day.`);
+    onDone(`An officer will reply to ${email.trim()} by the next working day.`);
   }
 
   return (
     <div className="tnw-card">
       <p>{text}</p>
       <div className="tnw-actions tnw-actions--stack">
-        <button type="button" className="tnw-btn tnw-btn--primary" onClick={() => setMode('callback')}>📞 {t.callback}</button>
-        <button type="button" className="tnw-btn" onClick={() => setMode('email')}>✉️ {t.email}</button>
+        <button type="button" className="tnw-btn tnw-btn--primary" onClick={() => setMode('callback')}><Icon name="phone" size={16} />{t.callback}</button>
+        <button type="button" className="tnw-btn" onClick={() => setMode('email')}><Icon name="mail" size={16} />{t.email}</button>
       </div>
       {mode === 'callback' && (
         <div className="tnw-handoff__more">

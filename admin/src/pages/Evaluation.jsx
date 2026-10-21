@@ -3,6 +3,7 @@ import Badge from '../components/Badge.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { pct, stamp } from '../lib/format.js';
 import { useStore } from '../store.jsx';
+import Icon from '../components/Icon.jsx';
 
 const STEPS = ['Golden Q&A', 'Unanswerable', 'Escalation', 'Red team', 'Audio / STT', 'Latency benchmark'];
 const fmt = (m) => (m.unit === 'ms' ? `${m.value.toLocaleString('en-IN')} ms` : pct(m.value, 1));
@@ -65,7 +66,7 @@ export default function Evaluation() {
               {R.metrics.map((m) => (
                 <tr key={m.name}>
                   <td className="cell-title">{m.name}</td><td className="num val">{fmt(m)}</td><td>{m.target}</td>
-                  <td>{m.pass ? <span className="pass">✓ Pass</span> : <span className="fail">✕ Below target</span>}</td>
+                  <td>{m.pass ? <span className="pass"><Icon name="check" size={14} />Pass</span> : <span className="fail"><Icon name="alert" size={14} />Below target</span>}</td>
                   <td className="num">{m.n}</td><td>{m.ref}</td>
                 </tr>
               ))}
@@ -83,7 +84,7 @@ export default function Evaluation() {
                 <div key={s.lang} className="budget__row">
                   <span>{s.lang}</span>
                   <span className="budget__bar" title={`target ${pct(s.target)}`}>
-                    <span style={{ width: `${s.acc * 100}%`, background: s.acc >= s.target ? 'var(--c-cache)' : 'var(--bad)' }} />
+                    <span style={{ width: `${s.acc * 100}%`, background: s.acc >= s.target ? 'var(--accent)' : 'var(--bad)' }} />
                     <i style={{ left: `${s.target * 100}%` }} />
                   </span>
                   <span className="num">{pct(s.acc)}</span>

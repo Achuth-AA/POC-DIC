@@ -1,13 +1,43 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Badge from '../components/Badge.jsx';
-import { HBars, LineChart, Ring } from '../components/charts.jsx';
+import Icon from '../components/Icon.jsx';
+import { HBars, LineChart } from '../components/charts.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { downloadJson, ms, pct } from '../lib/format.js';
 import { useStore } from '../store.jsx';
 
-const STAGE_COLORS = ['var(--c-eos)', 'var(--c-stt)', 'var(--c-ret)', 'var(--c-llm)', 'var(--c-tts)', '#94a3b8'];
-const ROUTE_COLORS = ['var(--c-cache)', 'var(--c-llm)', 'var(--c-tool)', 'var(--warn)', 'var(--bad)'];
+const STAGE_COLORS = ['var(--c-eos)', 'var(--c-stt)', 'var(--c-ret)', 'var(--c-llm)', 'var(--c-tts)', 'var(--c-pub)'];
+const STAGE_SHORT = ['End of speech', 'STT', 'Retrieval', 'LLM first token', 'TTS first audio', 'Publish'];
+// Colour only where it means something: the cache hit is the data story, the rest stays neutral.
+const ROUTE_COLORS = ['var(--accent)', 'var(--line-2)', 'var(--line-2)', 'var(--warn)', 'var(--bad)'];
+const TARGET = 1000;
+
+// Signature element: one voice turn laid out on its own clock, end of caller speech to first reply audio.
+function TurnTimeline({ stages }) {
+  const total = stages.reduce((a, s) => a + s.ms, 0);
+  const scale = Math.max(TARGET, total) * 1.06;
+  let at = 0;
+  return (
+    <div className="turnline">
+      <div className="turnline__total"><span className="turnline__num">{total}</span> ms <span className="note">to first audio, median, LLM path</span></div>
+      <div className="turnline__track" role="img" aria-label={stages.map((s) => `${s.stage} ${s.ms} ms`).join(', ')}>
+        {stages.map((s, i) => {
+          const left = (at / scale) * 100; at += s.ms;
+          return <span key={s.stage} className="turnline__seg" style={{ left: `${left}%`, width: `${(s.ms / scale) * 100}%`, background: STAGE_COLORS[i] }} title={`${s.stage}: ${s.ms} ms of ${s.budget} ms budget`} />;
+        })}
+        <i className="turnline__target" style={{ left: `${(TARGET / scale) * 100}%` }}><b>1,000 ms</b></i>
+      </div>
+      <ol className="turnline__legend">
+        {stages.map((s, i) => (
+          <li key={s.stage} className={s.ms > s.budget ? 'is-over' : ''}>
+            <i style={{ background: STAGE_COLORS[i] }} /><span>{STAGE_SHORT[i] || s.stage}</span><b className="num">{s.ms}</b><span className="note">budget {s.budget} ms</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { kpis: k, latency: L, cache: c, stageBudget, routes, languages, providers, sessions } = useStore();
@@ -16,16 +46,13 @@ export default function Dashboard() {
   const [range, setRange] = useState('24 h');
 
   const cards = [
-    { label: 'Voice calls', value: k.voiceCalls, meta: `${k.voiceMinutes.toLocaleString('en-IN')} billable minutes` },
-    { label: 'Chat sessions', value: k.chatSessions, meta: 'completed sessions (billing unit)' },
+    { label: 'Voice calls', value: k.voiceCalls, meta: `${k.voiceMinutes.toLocaleString('en-IN')} billable min` },
+    { label: 'Chat sessions', value: k.chatSessions, meta: 'completed sessions' },
     { label: 'Median latency', value: ms(k.p50), meta: 'target < 1,000 ms', good: k.p50 < 1000 },
-    { label: 'p90 latency', value: ms(k.p90), meta: 'p95 SLA ≤ 1,000 ms', good: k.p90 <= 1000 },
+    { label: 'p90 latency', value: ms(k.p90), meta: 'SLA p95 ≤ 1,000 ms', good: k.p90 <= 1000 },
     { label: 'Cache hit rate', value: pct(k.cacheHit), meta: 'target ≥ 40%', good: k.cacheHit >= 0.4 },
-    { label: 'Resolved by AI', value: pct(k.resolvedByAi), meta: `${k.handoffs} handoffs to officers` },
-    { label: 'Live right now', value: k.activeNow, meta: 'calls + chats' },
-    { label: 'Availability', value: pct(k.availability, 2), meta: 'SLA ≥ 99.9%', good: k.availability >= 0.999 },
+    { label: 'Resolved by AI', value: pct(k.resolvedByAi), meta: `${k.handoffs} handed to officers` },
   ];
-  const maxBudget = Math.max(...stageBudget.map((s) => s.budget));
   const active = (kind) => providers[kind].options.find((o) => o.id === providers[kind].active);
   const open = (id) => navigate(`/calls?id=${encodeURIComponent(id)}`);
 
@@ -34,7 +61,7 @@ export default function Dashboard() {
       <div className="page-head">
         <div>
           <h1>Dashboard</h1>
-          <p>Today, live. Latency is measured from the end of caller speech to the first audio byte of the reply.</p>
+          <p className="stamp"><span className="badge badge--live">{k.activeNow} live now</span> Availability {pct(k.availability, 2)} · Updated 10:58 IST</p>
         </div>
         <div className="page-head__actions">
           <div className="seg" role="group" aria-label="Time range">
@@ -44,19 +71,24 @@ export default function Dashboard() {
             ))}
           </div>
           <button type="button" className="btn" onClick={() => downloadJson(`metrics-${new Date().toISOString().slice(0, 10)}.json`, { kpis: k, latency: L, cache: c, routes })}>
-            Export metrics (JSON)
+            <Icon name="upload" size={16} />Export JSON
           </button>
         </div>
       </div>
 
-      <section className="grid grid--kpi" aria-label="Key numbers">
+      <section className="kpis" aria-label="Key numbers">
         {cards.map((card) => (
-          <div key={card.label} className="card kpi">
+          <div key={card.label} className="kpi">
             <div className="kpi__label">{card.label}</div>
             <div className="kpi__value">{card.value}</div>
-            <div className={`kpi__meta ${card.good === true ? 'good' : card.good === false ? 'bad' : ''}`}>{card.meta}</div>
+            <div className={`kpi__meta ${card.good === false ? 'bad' : ''}`}>{card.meta}</div>
           </div>
         ))}
+      </section>
+
+      <section className="card">
+        <div className="card__head"><div><h2>One voice turn</h2><p>Each stage against its budget; the line is the 1,000 ms target</p></div></div>
+        <div className="card__body"><TurnTimeline stages={stageBudget} /></div>
       </section>
 
       <div className="grid grid--3-1">
@@ -86,9 +118,15 @@ export default function Dashboard() {
         </section>
         <section className="card">
           <div className="card__head"><div><h2>Semantic cache</h2><p>Target: at least 40% gain</p></div></div>
-          <div className="card__body" style={{ display: 'grid', justifyItems: 'center', gap: 12 }}>
-            <Ring value={c.hitRate} label="Cache hit rate" color="var(--c-cache)" target={0.4} />
-            <dl className="kv" style={{ width: '100%' }}>
+          <div className="card__body cache-card">
+            <div className="meter">
+              <div className="meter__value">{pct(c.hitRate)}<span className="note"> of turns answered from cache</span></div>
+              <div className="meter__track" role="img" aria-label={`Cache hit rate ${pct(c.hitRate)}, target 40%`}>
+                <span style={{ width: `${c.hitRate * 100}%` }} /><i style={{ left: '40%' }} title="Target 40%" />
+              </div>
+              <div className="meter__scale"><span>0%</span><span style={{ left: '40%' }}>40% target</span><span>100%</span></div>
+            </div>
+            <dl className="kv">
               <dt>Status</dt><dd>{c.enabled ? <Badge tone="ok">Enabled</Badge> : <Badge tone="muted">Disabled</Badge>}</dd>
               <dt>Entries</dt><dd>{c.entries.toLocaleString('en-IN')} for KB v{c.kbVersion}</dd>
               <dt>Threshold</dt><dd>cosine ≥ {c.threshold}</dd>
@@ -101,28 +139,12 @@ export default function Dashboard() {
 
       <div className="grid grid--2">
         <section className="card">
-          <div className="card__head"><div><h2>Latency budget (LLM path, median)</h2><p>Where the time goes in one turn; tick = budget</p></div></div>
-          <div className="card__body">
-            <div className="budget">
-              {stageBudget.map((s, i) => (
-                <div key={s.stage} className="budget__row">
-                  <span>{s.stage}</span>
-                  <span className="budget__bar" title={`${s.ms} ms of ${s.budget} ms budget`}>
-                    <span style={{ width: `${(s.ms / maxBudget) * 100}%`, background: STAGE_COLORS[i] }} />
-                    <i style={{ left: `${(s.budget / maxBudget) * 100}%` }} />
-                  </span>
-                  <span className="num">{s.ms} ms</span>
-                </div>
-              ))}
-              <div className="budget__row" style={{ fontWeight: 700, borderTop: '1px solid var(--line)', paddingTop: 8 }}>
-                <span>Total</span><span /><span className="num">{stageBudget.reduce((a, s) => a + s.ms, 0)} ms</span>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className="card">
           <div className="card__head"><div><h2>How turns were answered</h2><p>Share of all turns today</p></div></div>
           <div className="card__body"><HBars items={routes.map((r, i) => ({ label: r.route, value: r.share, color: ROUTE_COLORS[i] }))} /></div>
+        </section>
+        <section className="card">
+          <div className="card__head"><div><h2>Languages</h2><p>Share of turns by detected language</p></div></div>
+          <div className="card__body"><HBars items={languages.map((l) => ({ label: l.lang, value: l.share, color: 'var(--line-2)' }))} /></div>
         </section>
       </div>
 
@@ -139,7 +161,7 @@ export default function Dashboard() {
                 {sessions.slice(0, 6).map((s) => (
                   <tr key={s.id} className="is-clickable" tabIndex={0} onClick={() => open(s.id)} onKeyDown={(e) => e.key === 'Enter' && open(s.id)}>
                     <td><div className="cell-title mono">{s.id}</div><div className="cell-sub">{s.caller}</div></td>
-                    <td>{s.channel === 'voice' ? '📞 Voice' : '💬 Chat'}</td>
+                    <td><span className="cell-title"><Icon name={s.channel === 'voice' ? 'phone' : 'chat'} size={16} />{s.channel === 'voice' ? 'Voice' : 'Chat'}</span></td>
                     <td>{s.lang}</td><td>{s.started}</td>
                     <td className="num">{s.turns}</td><td className="num">{s.p50} ms</td>
                     <td><Badge status={s.outcome} /></td>
@@ -156,15 +178,11 @@ export default function Dashboard() {
               <dl className="kv">
                 {['llm', 'stt', 'tts'].map((kind) => (
                   <div key={kind} style={{ display: 'contents' }}>
-                    <dt>{kind.toUpperCase()}</dt><dd>{active(kind).name} <Badge status={active(kind).health} /></dd>
+                    <dt>{{ llm: 'Language model', stt: 'Speech to text', tts: 'Text to speech' }[kind]}</dt><dd>{active(kind).name} <Badge status={active(kind).health} /></dd>
                   </div>
                 ))}
               </dl>
             </div>
-          </section>
-          <section className="card">
-            <div className="card__head"><div><h2>Languages</h2></div></div>
-            <div className="card__body"><HBars items={languages.map((l) => ({ label: l.lang, value: l.share }))} /></div>
           </section>
         </div>
       </div>

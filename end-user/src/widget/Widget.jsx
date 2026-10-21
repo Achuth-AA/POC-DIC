@@ -6,6 +6,7 @@ import { ConfirmCard, OfflineHandoffCard, OtpCard, StatusCard } from './cards.js
 import { backend, LANGUAGES } from './mockBackend.js';
 import { STRINGS } from './strings.js';
 import './widget.css';
+import Icon from '../components/Icon.jsx';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Only plain messages are restored after a refresh; forms and cards are not.
@@ -186,15 +187,15 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
               <>
                 <ul className="tnw-sources" aria-label={t.sources}>
                   {m.sources.map((s) => (
-                    <li key={`${s.title}-${s.page}`}><a href="#source" onClick={(e) => e.preventDefault()} title="Opens the document at this page (demo)">📄 {s.title} · p.{s.page}</a></li>
+                    <li key={`${s.title}-${s.page}`}><a href="#source" onClick={(e) => e.preventDefault()} title="Opens the document at this page (demo)"><Icon name="file" size={14} />{s.title} · p.{s.page}</a></li>
                   ))}
                 </ul>
                 <div className="tnw-feedback">
                   {m.fb ? <span>{t.thanks}</span> : (
                     <>
                       <span>{t.helpful}</span>
-                      <button type="button" className="tnw-fb" aria-label="Helpful" onClick={() => feedback(m, 'up')}>👍</button>
-                      <button type="button" className="tnw-fb" aria-label="Not helpful" onClick={() => feedback(m, 'down')}>👎</button>
+                      <button type="button" className="tnw-fb" aria-label="Helpful" onClick={() => feedback(m, 'up')}><Icon name="thumbUp" size={16} /></button>
+                      <button type="button" className="tnw-fb" aria-label="Not helpful" onClick={() => feedback(m, 'down')}><Icon name="thumbDown" size={16} /></button>
                     </>
                   )}
                 </div>
@@ -205,7 +206,7 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
       case 'agent':
         return <div key={m.id} className="tnw-msg tnw-msg--agent"><span className="tnw-msg__who">{m.name}</span><p>{m.text}</p></div>;
       case 'system':
-        return <p key={m.id} className="tnw-system">{m.text}</p>;
+        return <p key={m.id} className="tnw-system">{m.icon && <Icon name={m.icon} size={14} />}{m.text}</p>;
       case 'waiting':
         return <p key={m.id} className="tnw-system tnw-waiting"><span className="tnw-spinner" aria-hidden="true" />{m.text}</p>;
       case 'typing':
@@ -221,7 +222,7 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
       case 'otp':
         return (
           <OtpCard key={m.id} t={t} sessionId={sessionRef.current}
-            onVerified={(blocks) => { replaceMsg(m.id, { kind: 'system', text: '✓ Verified with OTP' }); renderBlocks(blocks, langRef.current); }} />
+            onVerified={(blocks) => { replaceMsg(m.id, { kind: 'system', text: 'Verified with OTP', icon: 'shield' }); renderBlocks(blocks, langRef.current); }} />
         );
       case 'status':
         return <StatusCard key={m.id} record={m.record} />;
@@ -239,11 +240,11 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
       {!open && (
         <div className="tnw-launchers">
           <button type="button" className="tnw-launcher tnw-launcher--call" aria-haspopup="dialog" aria-label={t.voice} onClick={() => openPanel({ call: true })}>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-3 2a11 11 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>
+            <Icon name="phone" size={22} />
             <span className="tnw-launcher__label">{t.callLauncher}</span>
           </button>
           <button ref={launcherRef} type="button" className="tnw-launcher" aria-haspopup="dialog" aria-expanded="false" aria-controls="tnw-panel" aria-label={t.open} onClick={() => openPanel()}>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /><circle cx="9" cy="10.5" r="1.2" fill="currentColor" /><circle cx="12" cy="10.5" r="1.2" fill="currentColor" /><circle cx="15" cy="10.5" r="1.2" fill="currentColor" /></svg>
+            <Icon name="chat" size={22} />
             <span className="tnw-launcher__label">{t.launcher}</span>
           </button>
         </div>
@@ -264,10 +265,10 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
                 </select>
               </label>
               <button type="button" className="tnw-icon tnw-voice" aria-label={t.voice} title={t.voice} onClick={startCall}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                <Icon name="phone" size={20} />
               </button>
               <button type="button" className="tnw-icon tnw-close" aria-label={t.close} onClick={closePanel}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                <Icon name="x" size={20} />
               </button>
             </div>
           </header>
@@ -279,7 +280,7 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
             <textarea id="tnw-text" ref={inputRef} rows={1} maxLength={500} value={text} placeholder={t.placeholder} onChange={onInput}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) submit(e); }} />
             <button type="submit" className="tnw-send" aria-label={t.send} disabled={busy}>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2-6z" fill="currentColor" /></svg>
+              <Icon name="send" size={18} />
             </button>
           </form>
           <p className="tnw-disclaimer">{t.disclaimer}</p>
@@ -297,9 +298,9 @@ const Widget = forwardRef(function Widget({ tenant = 'demo' }, ref) {
               </label>
               <div className="tnw-call__controls">
                 <button type="button" className="tnw-btn tnw-call__mute" aria-pressed={muted} disabled={call !== 'live'} onClick={() => setMuted((v) => !v)}>
-                  {muted ? `🔇 ${t.unmute}` : `🎙️ ${t.mute}`}
+                  <Icon name={muted ? 'micOff' : 'mic'} size={18} />{muted ? t.unmute : t.mute}
                 </button>
-                <button type="button" className="tnw-btn tnw-btn--danger tnw-call__end" autoFocus onClick={() => setCall('off')}>{t.endCall}</button>
+                <button type="button" className="tnw-btn tnw-btn--danger tnw-call__end" autoFocus onClick={() => setCall('off')}><Icon name="phoneOff" size={18} />{t.endCall}</button>
               </div>
               <p className="tnw-call__note">{t.callNote}</p>
               <button type="button" className="tnw-link tnw-call__back" onClick={() => setCall('off')}>{t.backToChat}</button>
