@@ -1,6 +1,6 @@
 // Mock data for the admin console. Shapes follow the orchestrator API in docs/POC_DESIGN.md §13–14,
-// so each page can later swap MOCK.* for fetch('/v1/...') without changing its rendering code.
-window.MOCK = (function () {
+// so the store can later load these from fetch('/v1/...') without changing the pages.
+export function createMock() {
   const kb = { tenant: 'pm-kisan-demo', tenantName: 'PM-KISAN (demo)', version: 7 };
 
   const documents = [
@@ -194,4 +194,4 @@ window.MOCK = (function () {
   };
 
   return { kb, documents, chunks, tables, providers, cache, changeLog, latency, stageBudget, kpis, routes, languages, sessions, turns, evalReport };
-})();
+}

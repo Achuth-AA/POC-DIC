@@ -186,7 +186,8 @@ svg .ring-num { font-size: 22px; font-weight: 700; fill: var(--ink); }
 .scrim.is-open { opacity: 1; pointer-events: auto; }
 .modal { position: fixed; inset: 0; display: grid; place-items: center; z-index: 70; padding: 16px; }
 .modal[hidden] { display: none; }
-.modal__box { background: var(--surface); border-radius: 14px; width: min(480px, 100%); box-shadow: 0 20px 60px rgba(16,24,40,.3); }
+.modal .scrim { z-index: 0; }
+.modal__box { position: relative; z-index: 1; background: var(--surface); border-radius: 14px; width: min(480px, 100%); box-shadow: 0 20px 60px rgba(16,24,40,.3); }
 .modal__box header { padding: 18px 20px 0; }
 .modal__box .modal__body { padding: 12px 20px; color: var(--muted); }
 .modal__box footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px 18px; }
@@ -207,7 +208,7 @@ svg .ring-num { font-size: 22px; font-weight: 700; fill: var(--ink); }
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }
   .sidebar { position: fixed; left: 0; top: 0; z-index: 50; width: 260px; transform: translateX(-100%); transition: transform .2s; }
-  body.nav-open .sidebar { transform: none; box-shadow: 10px 0 40px rgba(0,0,0,.3); }
+  .shell.nav-open .sidebar { transform: none; box-shadow: 10px 0 40px rgba(0,0,0,.3); }
   .menu-btn { display: grid; }
   .content { padding: 16px; }
   .topbar { padding: 10px 16px; flex-wrap: wrap; }
