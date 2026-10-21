@@ -1,0 +1,66 @@
+/* Page-specific styles (moved from the per-page <style> blocks of the static version). */
+
+/* knowledge */
+.dropzone { border: 2px dashed #b9c4da; border-radius: var(--radius); padding: 22px; text-align: center; background: var(--surface-2); transition: background .15s, border-color .15s; }
+.dropzone.is-over { background: var(--accent-soft); border-color: var(--accent); }
+.dropzone strong { display: block; font-size: 15px; margin-bottom: 4px; }
+.upload-opts { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 12px; font-size: 13px; }
+.upload-opts label { display: inline-flex; gap: 6px; align-items: center; }
+.chunk { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--surface-2); }
+.chunk__meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 4px; flex-wrap: wrap; }
+.chunk p { margin: 0; }
+.hit { border-left: 3px solid var(--accent); }
+.score { font-weight: 700; color: var(--accent-2); }
+.answer { background: #f2f8f4; border: 1px solid #cde9d6; border-radius: 10px; padding: 12px 14px; }
+.answer__label { font-size: 12px; font-weight: 700; color: var(--ok); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.progress { height: 6px; background: var(--track); border-radius: 999px; overflow: hidden; width: 120px; }
+.progress span { display: block; height: 100%; background: var(--accent); width: 0; transition: width .4s; }
+.pipeline { display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; }
+.pipeline span { padding: 3px 8px; border-radius: 6px; background: var(--track); color: var(--muted); }
+.pipeline span.done { background: var(--ok-bg); color: var(--ok); }
+  
+
+/* providers */
+.prov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.opt { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; padding: 12px; border: 1.5px solid var(--line); border-radius: 10px; cursor: pointer; }
+.opt:hover { background: var(--surface-2); }
+.opt input { margin-top: 3px; }
+.opt.is-active { border-color: var(--accent); background: var(--accent-soft); }
+.opt__name { font-weight: 700; }
+.opt__meta { font-size: 12px; color: var(--muted); }
+.opt__lat { font-size: 12px; font-weight: 600; text-align: right; white-space: nowrap; }
+.opts { display: grid; gap: 8px; }
+.prov-foot { display: grid; gap: 10px; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); }
+.changed { color: var(--warn); font-weight: 600; font-size: 12.5px; }
+.range { display: flex; align-items: center; gap: 10px; }
+.range input { flex: 1; }
+@media (max-width: 1200px) { .prov-grid { grid-template-columns: 1fr; } }
+  
+
+/* calls */
+.turns { display: grid; gap: 12px; }
+.turn { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 12px; }
+.turn__bubble { overflow-wrap: anywhere; }
+.turn__who { font-size: 12px; font-weight: 700; color: var(--muted); padding-top: 9px; text-align: right; }
+.turn__bubble { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--surface); }
+.turn--user .turn__bubble { background: var(--surface-2); }
+.turn--system .turn__bubble { background: transparent; border-style: dashed; color: var(--muted); font-size: 12.5px; }
+.turn__text { margin: 0; }
+.turn__meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.turn__meta .stack { width: 180px; }
+.turn__src { font-size: 12px; margin-top: 6px; color: var(--accent-2); }
+.turn__tool { margin-top: 8px; font-size: 12px; background: #fdf2f8; border: 1px solid #f5cbe1; border-radius: 8px; padding: 6px 8px; }
+.turn__note { margin-top: 6px; font-size: 12px; color: var(--warn); }
+.stack-legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.stack-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+  
+
+/* evaluation */
+.run-progress { display: none; gap: 8px; align-items: center; }
+.run-progress.is-on { display: flex; }
+.run-progress .bar { width: 200px; height: 8px; background: var(--track); border-radius: 999px; overflow: hidden; }
+.run-progress .bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.val { font-weight: 700; font-variant-numeric: tabular-nums; }
+.pass { color: var(--ok); font-weight: 700; }
+.fail { color: var(--bad); font-weight: 700; }
+  
