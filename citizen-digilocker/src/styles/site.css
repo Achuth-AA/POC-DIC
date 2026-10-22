@@ -314,7 +314,7 @@ body.high-contrast .tile, body.high-contrast .plate__pic, body.high-contrast .sl
   .coupon__left, .coupon__right { padding: 28px 20px; }
   .coupon__right { border-left: 0; border-top: 5px dotted var(--bg); }
   .coupon input, .coupon select { height: 54px; }
-  .tiles { grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 6px 96px; }
+  .tiles { grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 6px 168px; }
   .tile { padding: 20px; min-height: 0; }
   .tile--mark { order: -2; min-height: 160px; font-size: 18vw; grid-column: 1 / -1; }
   .tile--accent { order: -1; min-height: 160px; grid-column: 1 / -1; }
